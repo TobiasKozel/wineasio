@@ -24,6 +24,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <sched.h>
 #include <stdio.h>
 #include <errno.h>
 #include <limits.h>
@@ -32,6 +33,7 @@
 #include <pthread.h>
 #include <jack/jack.h>
 #include <jack/thread.h>
+#include <signal.h>
 
 #ifdef DEBUG
 #include "wine/debug.h"
@@ -267,6 +269,7 @@ static inline int  jack_sample_rate_callback (jack_nframes_t nframes, void *arg)
 HRESULT WINAPI  WineASIOCreateInstance(REFIID riid, LPVOID *ppobj);
 static  VOID    configure_driver(IWineASIOImpl *This);
 
+static DWORD WINAPI jack_sync_thread_function(LPVOID arg);
 static DWORD WINAPI jack_thread_creator_helper(LPVOID arg);
 static int          jack_thread_creator(pthread_t* thread_id, const pthread_attr_t* attr, void *(*function)(void*), void* arg);
 
@@ -310,6 +313,18 @@ struct {
     pthread_t   jack_callback_pthread_id;
     HANDLE      jack_callback_thread_created;
 } jack_thread_creator_privates;
+
+struct {
+    HANDLE wine_thread; // wine thread handle
+    pthread_t wine_pthread;
+    sigset_t wine_sig_set;
+    pthread_t jack_pthread;
+    sigset_t jack_sig_set;
+    void* arg;
+    jack_nframes_t nframes;
+    char wine_thread_busy;
+    char running;
+} jack_sync_privates;
 
 /*****************************************************************************
  * Interface method definitions
@@ -470,7 +485,10 @@ HIDDEN ASIOBool STDMETHODCALLTYPE Init(LPWINEASIO iface, void *sysRef)
     }
     TRACE("%i IOChannel structures initialized\n", This->wineasio_number_inputs + This->wineasio_number_outputs);
 
+    // this function is called on jack_activate to create a thread (not with pipewire-jack)
     jack_set_thread_creator(jack_thread_creator);
+    // This is later checked to detect when jack_thread_creator wasn't called
+    jack_thread_creator_privates.jack_callback_thread = NULL;
 
     if (jack_set_buffer_size_callback(This->jack_client, jack_buffer_size_callback, This))
     {
@@ -1042,6 +1060,32 @@ HIDDEN ASIOError STDMETHODCALLTYPE CreateBuffers(LPWINEASIO iface, ASIOBufferInf
     if (jack_activate(This->jack_client))
         return ASE_NotPresent;
 
+    if (jack_thread_creator_privates.jack_callback_thread == NULL)
+    {
+        // No thread created, this means jack_process_callback will
+        // be called from a thread which is not known to wine.
+        // This will crash the application.
+        // Right now this is only an issue with pipewire-jack.
+
+        jack_sync_privates.wine_pthread = 0;
+        jack_sync_privates.jack_pthread = 0;
+
+        // Maybe this is faster than condition variables?
+        // https://stackoverflow.com/a/23945651
+        // TODO needs a/b testing to be sure
+        sigemptyset(&jack_sync_privates.wine_sig_set);
+        sigaddset(&jack_sync_privates.wine_sig_set, SIGUSR1);
+        sigaddset(&jack_sync_privates.wine_sig_set, SIGSEGV);
+
+        sigemptyset(&jack_sync_privates.jack_sig_set);
+        sigaddset(&jack_sync_privates.jack_sig_set, SIGUSR1);
+        sigaddset(&jack_sync_privates.jack_sig_set, SIGSEGV);
+
+        jack_sync_privates.running = 1;
+        jack_sync_privates.wine_thread = CreateThread(
+            NULL, 0, jack_sync_thread_function, This, 0, 0);
+    }
+
     /* connect to the hardware io */
     if (This->wineasio_connect_to_hardware)
     {
@@ -1071,6 +1115,15 @@ HIDDEN ASIOError STDMETHODCALLTYPE DisposeBuffers(LPWINEASIO iface)
 {
     IWineASIOImpl   *This = (IWineASIOImpl*)iface;
     int             i;
+
+    if (jack_sync_privates.wine_thread != NULL) {
+        jack_sync_privates.running = 0;
+        // Might be too dangerous
+        // TerminateThread(jack_sync_privates.wine_thread, 0);
+        // Wait wine thread to exit
+        WaitForSingleObject(jack_sync_privates.wine_thread, INFINITE);
+        jack_sync_privates.wine_thread = NULL;
+    }
 
     TRACE("iface: %p\n", iface);
 
@@ -1252,7 +1305,10 @@ static inline void jack_latency_callback(jack_latency_callback_mode_t mode, void
     return;
 }
 
-static inline int jack_process_callback(jack_nframes_t nframes, void *arg)
+/*
+ *  Actual callback called from the correct thread
+ */
+static inline int jack_process_callback_impl(jack_nframes_t nframes, void *arg)
 {
     IWineASIOImpl               *This = (IWineASIOImpl*)arg;
 
@@ -1319,6 +1375,68 @@ static inline int jack_process_callback(jack_nframes_t nframes, void *arg)
     return 0;
 }
 
+/*
+ * Own sync thread only used to keep both in sync
+ */
+static DWORD WINAPI jack_sync_thread_function(LPVOID arg)
+{
+    struct sched_param param;
+
+    jack_sync_privates.wine_pthread = pthread_self();
+
+    // Try to prioritize thread
+    // int max_priority = sched_get_priority_max(SCHED_FIFO);
+    param.sched_priority = 95;
+    pthread_setschedparam(
+        jack_sync_privates.wine_pthread, SCHED_FIFO, &param);
+    
+    while (jack_sync_privates.running == 1) {
+        // wait until jack has called
+        int signal;
+        jack_sync_privates.wine_thread_busy = 0;
+        sigwait(&jack_sync_privates.jack_sig_set, &signal);
+        jack_sync_privates.wine_thread_busy = 1;
+        jack_process_callback_impl(
+            jack_sync_privates.nframes,
+            jack_sync_privates.arg
+        );
+        // Wake the jack thread again
+        pthread_kill(jack_sync_privates.jack_pthread, SIGUSR1);
+    }
+    return 0;
+}
+
+
+/*
+ * Called from jack, might be a non wine thread
+ */
+static inline int jack_process_callback(jack_nframes_t nframes, void *arg)
+{
+    int signal;
+
+    if (jack_sync_privates.wine_thread == NULL)
+    {
+        // Called from wine thread, just forward the call
+        return jack_process_callback_impl(nframes, arg);
+    }
+    
+    // if (jack_sync_privates.wine_thread_busy == 1)
+    // {
+    //     ERR("Called busy wine thread");
+    //     return 0;
+    // }
+    // non wine thread, needs to delegated it to proper thread
+    jack_sync_privates.jack_pthread = pthread_self();
+    jack_sync_privates.nframes = nframes;
+    jack_sync_privates.arg = arg;
+    // wake up the wine thread to do the actual processing
+    pthread_kill(jack_sync_privates.wine_pthread, SIGUSR1);
+    
+    // wait until the wine thread is done
+    sigwait(&jack_sync_privates.jack_sig_set, &signal);
+    return 0;
+}
+
 static inline int jack_sample_rate_callback(jack_nframes_t nframes, void *arg)
 {
     IWineASIOImpl   *This = (IWineASIOImpl*)arg;
@@ -1345,8 +1463,10 @@ static WCHAR *strrchrW(const WCHAR* str, WCHAR ch)
 }
 #endif
 
-/* Function called by JACK to create a thread in the wine process context,
- *  uses the global structure jack_thread_creator_privates to communicate with jack_thread_creator_helper() */
+/*  
+ *  Function called by JACK on jack_activate to create a thread in the wine process context,
+ *  uses the global structure jack_thread_creator_privates to communicate with jack_thread_creator_helper()
+ */
 static int jack_thread_creator(pthread_t* thread_id, const pthread_attr_t* attr, void *(*function)(void*), void* arg)
 {
     TRACE("arg: %p, thread_id: %p, attr: %p, function: %p\n", arg, thread_id, attr, function);
@@ -1354,19 +1474,26 @@ static int jack_thread_creator(pthread_t* thread_id, const pthread_attr_t* attr,
     jack_thread_creator_privates.jack_callback_thread = function;
     jack_thread_creator_privates.arg = arg;
     jack_thread_creator_privates.jack_callback_thread_created = CreateEventW(NULL, FALSE, FALSE, NULL);
-    CreateThread( NULL, 0, jack_thread_creator_helper, arg, 0,0 );
+    CreateThread(NULL, 0, jack_thread_creator_helper, arg, 0, 0); // We jump into jack_thread_creator_helper now
+    // Now we wait until jack_thread_creator_helper is finished and has revealed the thread id
     WaitForSingleObject(jack_thread_creator_privates.jack_callback_thread_created, INFINITE);
+    // Now we know the thread id an can pass it back to jack
     *thread_id = jack_thread_creator_privates.jack_callback_pthread_id;
     return 0;
 }
 
-/* internal helper function for returning the posix thread_id of the newly created callback thread */
+/*
+ *  internal helper function for returning the posix thread_id of the newly created callback thread
+ *  This basically wraps jack_process_callback, no idea where it's called from yet
+ */
 static DWORD WINAPI jack_thread_creator_helper(LPVOID arg)
 {
     TRACE("arg: %p\n", arg);
-
+    // write the id in the shared data
     jack_thread_creator_privates.jack_callback_pthread_id = pthread_self();
+    // notify the main thread
     SetEvent(jack_thread_creator_privates.jack_callback_thread_created);
+    // This results in a call to jack_process_callback
     jack_thread_creator_privates.jack_callback_thread(jack_thread_creator_privates.arg);
     return 0;
 }
