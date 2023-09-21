@@ -3,31 +3,29 @@
     "configurations": [
         {
             "type": "gdb",
-            "request": "launch",
-            "name": "Launch Program",
-            "target": "C:\\VBASIOTest64.exe",
+            "request": "attach",
+            "name": "Build & Debug",
+            "target": ":11111",
+            "remote": true,
             "cwd": "${workspaceRoot}",
-            "gdbpath": "winedbg",
-            "debugger_args": ["--gdb", "--no-start"],
-            "valuesFormatting": "parseText",
-            "showDevDebugOutput": true,
-            "printCalls": true,
+            "env": {
+                "WINEPREFIX": "${workspaceRoot}/prefix_debug"
+            },
+            "preLaunchTask": "build_and_debug",
+            "postDebugTask": "kill_debug"
         },
         {
             "type": "gdb",
-            "request": "attach",
-            "name": "Attach to gdbserver",
-            "target": ":13337",
-            "remote": true,
+            "request": "launch",
+            "name": "broken",
             "cwd": "${workspaceRoot}",
-            "printCalls": true,
-            "valuesFormatting": "parseText",
-            "autorun": [
-                "set breakpoint pending on",
-                "set solib-search-path '/usr/lib32/wine/i386-unix/'"
-            ],
-            "preLaunchTask": "BuildAndWineDbg",
-            "postDebugTask": "KillWineDbg"
-        }
+            "target": "C:\\VBASIOTest64.exe",
+            "gdbpath": "winedbg",
+            "env": {
+                "WINEPREFIX": "${workspaceRoot}/prefix_debug"
+            },
+            "debugger_args": ["--gdb"],
+            "preLaunchTask": "make",
+        },
     ]
 }

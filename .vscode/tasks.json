@@ -22,6 +22,21 @@
             "label": "format",
             "type": "shell",
             "command": "clang-format -i --style=Google --sort-includes=false asio.c main.c interface.h regsvr.c"
+        },
+        {
+            "label": "setup_prefix",
+            "type": "shell",
+            "command": "${workspaceRoot}/.vscode/setup_prefix.sh"
+        },
+        {
+            "label": "build_and_debug",
+            "type": "shell",
+            "command": "${workspaceRoot}/.vscode/build_and_launch.sh",
+        },
+        {
+            "label": "kill_debug",
+            "type": "shell",
+            "command": "${workspaceRoot}/.vscode/kill_debug.sh"
         }
     ]
 }
