@@ -1,5 +1,5 @@
 /*
- *	self-registerable dll functions for wineasio.dll
+ *	self-registerable dll functions for wineasiopw.dll
  *
  * Copyright (C) 2003 John K. Hohm
  * Copyright (C) 2006 Robert Reif
@@ -510,7 +510,7 @@ static struct regsvr_coclass const coclass_list[] = {
     {   &CLSID_WineASIO,
 	"WineASIO Object",
 	NULL,
-	"wineasio.dll",
+	"wineasiopw.dll",
 	"Apartment"
     },
     { NULL }			/* list terminator */

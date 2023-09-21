@@ -5,3 +5,6 @@ build32/
 build64/
 debian/
 __pycache__/
+.cache
+prefix_debug
+compile_commands.json

@@ -1,0 +1,33 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "gdb",
+            "request": "launch",
+            "name": "Launch Program",
+            "target": "C:\\VBASIOTest64.exe",
+            "cwd": "${workspaceRoot}",
+            "gdbpath": "winedbg",
+            "debugger_args": ["--gdb", "--no-start"],
+            "valuesFormatting": "parseText",
+            "showDevDebugOutput": true,
+            "printCalls": true,
+        },
+        {
+            "type": "gdb",
+            "request": "attach",
+            "name": "Attach to gdbserver",
+            "target": ":13337",
+            "remote": true,
+            "cwd": "${workspaceRoot}",
+            "printCalls": true,
+            "valuesFormatting": "parseText",
+            "autorun": [
+                "set breakpoint pending on",
+                "set solib-search-path '/usr/lib32/wine/i386-unix/'"
+            ],
+            "preLaunchTask": "BuildAndWineDbg",
+            "postDebugTask": "KillWineDbg"
+        }
+    ]
+}

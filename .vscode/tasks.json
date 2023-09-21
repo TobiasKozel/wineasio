@@ -1,0 +1,27 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "make",
+            "type": "shell",
+            "command": "make clean && make DEBUG=true",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "compile_commands",
+            "type": "shell",
+            "command": "bear -- make"
+        },
+        {
+            "label": "format",
+            "type": "shell",
+            "command": "clang-format -i --style=Google --sort-includes=false asio.c main.c interface.h regsvr.c"
+        }
+    ]
+}

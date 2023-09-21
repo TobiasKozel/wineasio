@@ -12,7 +12,7 @@ ifeq ($(M),)
 $(error incorrect use of Makefile, M var is missing)
 endif
 
-wineasio_dll_MODULE   = wineasio.dll
+wineasio_dll_MODULE   = wineasiopw.dll
 
 PREFIX                = /usr
 SRCDIR                = .
@@ -29,7 +29,7 @@ WINECC    = winegcc
 CEXTRA                = -m$(M) -D_REENTRANT -fPIC -Wall -pipe
 CEXTRA               += -fno-strict-aliasing -Wdeclaration-after-statement -Wwrite-strings -Wpointer-arith
 CEXTRA               += -Werror=implicit-function-declaration
-CEXTRA               += $(shell pkg-config --cflags jack)
+CEXTRA               += $(shell pkg-config --cflags libpipewire-0.3) $(shell pkg-config --cflags jack)
 RCEXTRA               =
 INCLUDE_PATH          = -I. -Irtaudio/include
 INCLUDE_PATH         += -I$(PREFIX)/include/wine
@@ -40,7 +40,7 @@ INCLUDE_PATH         += -I/opt/wine-stable/include
 INCLUDE_PATH         += -I/opt/wine-stable/include/wine/windows
 INCLUDE_PATH         += -I/opt/wine-staging/include
 INCLUDE_PATH         += -I/opt/wine-staging/include/wine/windows
-LIBRARIES             = $(shell pkg-config --libs jack)
+LIBRARIES             = $(shell pkg-config --libs libpipewire-0.3) $(shell pkg-config --libs jack)
 
 # 64bit build needs an extra flag
 ifeq ($(M),64)
