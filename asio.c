@@ -63,39 +63,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(asio);
 #define ASIO_MAXIMUM_BUFFERSIZE     8192
 #define ASIO_PREFERRED_BUFFERSIZE   1024
 
-/* ASIO drivers (breaking the COM specification) use the Microsoft variety of
- * thiscall calling convention which gcc is unable to produce.  These macros
- * add an extra layer to fixup the registers. Borrowed from config.h and the
- * wine source code.
- */
-
-/* From config.h */
-#define __ASM_DEFINE_FUNC(name,suffix,code) asm(".text\n\t.align 4\n\t.globl " #name suffix "\n\t.type " #name suffix ",@function\n" #name suffix ":\n\t.cfi_startproc\n\t" code "\n\t.cfi_endproc\n\t.previous");
-#define __ASM_GLOBAL_FUNC(name,code) __ASM_DEFINE_FUNC(name,"",code)
-#define __ASM_NAME(name) name
-#define __ASM_STDCALL(args) ""
-
-/* From wine source */
-#ifdef __i386__  /* thiscall functions are i386-specific */
-
-#define THISCALL(func) __thiscall_ ## func
-#define THISCALL_NAME(func) __ASM_NAME("__thiscall_" #func)
-#define __thiscall __stdcall
-#define DEFINE_THISCALL_WRAPPER(func,args) \
-    extern void THISCALL(func)(void); \
-    __ASM_GLOBAL_FUNC(__thiscall_ ## func, \
-                      "popl %eax\n\t" \
-                      "pushl %ecx\n\t" \
-                      "pushl %eax\n\t" \
-                      "jmp " __ASM_NAME(#func) __ASM_STDCALL(args) )
-#else /* __i386__ */
-
-#define THISCALL(func) func
-#define THISCALL_NAME(func) __ASM_NAME(#func)
-#define __thiscall __stdcall
-#define DEFINE_THISCALL_WRAPPER(func,args) /* nothing */
-
-#endif /* __i386__ */
 
 /* Hide ELF symbols for the COM members - No need to to export them */
 #define HIDDEN __attribute__ ((visibility("hidden")))
@@ -225,31 +192,6 @@ HIDDEN ASIOError STDMETHODCALLTYPE      ControlPanel(LPWINEASIO iface);
 HIDDEN ASIOError STDMETHODCALLTYPE      Future(LPWINEASIO iface, LONG selector, void *opt);
 HIDDEN ASIOError STDMETHODCALLTYPE      OutputReady(LPWINEASIO iface);
 
-/*
- * thiscall wrappers for the vtbl (as seen from app side 32bit)
- */
-
-HIDDEN void __thiscall_Init(void);
-HIDDEN void __thiscall_GetDriverName(void);
-HIDDEN void __thiscall_GetDriverVersion(void);
-HIDDEN void __thiscall_GetErrorMessage(void);
-HIDDEN void __thiscall_Start(void);
-HIDDEN void __thiscall_Stop(void);
-HIDDEN void __thiscall_GetChannels(void);
-HIDDEN void __thiscall_GetLatencies(void);
-HIDDEN void __thiscall_GetBufferSize(void);
-HIDDEN void __thiscall_CanSampleRate(void);
-HIDDEN void __thiscall_GetSampleRate(void);
-HIDDEN void __thiscall_SetSampleRate(void);
-HIDDEN void __thiscall_GetClockSources(void);
-HIDDEN void __thiscall_SetClockSource(void);
-HIDDEN void __thiscall_GetSamplePosition(void);
-HIDDEN void __thiscall_GetChannelInfo(void);
-HIDDEN void __thiscall_CreateBuffers(void);
-HIDDEN void __thiscall_DisposeBuffers(void);
-HIDDEN void __thiscall_ControlPanel(void);
-HIDDEN void __thiscall_Future(void);
-HIDDEN void __thiscall_OutputReady(void);
 
 /*
  *  Jack callbacks
@@ -280,27 +222,27 @@ static const IWineASIOVtbl WineASIO_Vtbl =
     (void *) AddRef,
     (void *) Release,
 
-    (void *) THISCALL(Init),
-    (void *) THISCALL(GetDriverName),
-    (void *) THISCALL(GetDriverVersion),
-    (void *) THISCALL(GetErrorMessage),
-    (void *) THISCALL(Start),
-    (void *) THISCALL(Stop),
-    (void *) THISCALL(GetChannels),
-    (void *) THISCALL(GetLatencies),
-    (void *) THISCALL(GetBufferSize),
-    (void *) THISCALL(CanSampleRate),
-    (void *) THISCALL(GetSampleRate),
-    (void *) THISCALL(SetSampleRate),
-    (void *) THISCALL(GetClockSources),
-    (void *) THISCALL(SetClockSource),
-    (void *) THISCALL(GetSamplePosition),
-    (void *) THISCALL(GetChannelInfo),
-    (void *) THISCALL(CreateBuffers),
-    (void *) THISCALL(DisposeBuffers),
-    (void *) THISCALL(ControlPanel),
-    (void *) THISCALL(Future),
-    (void *) THISCALL(OutputReady)
+    (void *) (Init),
+    (void *) (GetDriverName),
+    (void *) (GetDriverVersion),
+    (void *) (GetErrorMessage),
+    (void *) (Start),
+    (void *) (Stop),
+    (void *) (GetChannels),
+    (void *) (GetLatencies),
+    (void *) (GetBufferSize),
+    (void *) (CanSampleRate),
+    (void *) (GetSampleRate),
+    (void *) (SetSampleRate),
+    (void *) (GetClockSources),
+    (void *) (SetClockSource),
+    (void *) (GetSamplePosition),
+    (void *) (GetChannelInfo),
+    (void *) (CreateBuffers),
+    (void *) (DisposeBuffers),
+    (void *) (ControlPanel),
+    (void *) (Future),
+    (void *) (OutputReady)
 };
 
 /* structure needed to create the JACK callback thread in the wine process context */
@@ -407,8 +349,6 @@ HIDDEN ULONG STDMETHODCALLTYPE Release(LPWINEASIO iface)
  *              sysHanle is 0 on OS/X and on windows it contains the applications main window handle
  *  Returns:    ASIOFalse on error, and ASIOTrue on success
  */
-
-DEFINE_THISCALL_WRAPPER(Init,8)
 HIDDEN ASIOBool STDMETHODCALLTYPE Init(LPWINEASIO iface, void *sysRef)
 {
     IWineASIOImpl   *This = (IWineASIOImpl *)iface;
@@ -514,8 +454,6 @@ HIDDEN ASIOBool STDMETHODCALLTYPE Init(LPWINEASIO iface, void *sysRef)
  * void GetDriverName(char *name);
  *  Function:    Returns the driver name in name
  */
-
-DEFINE_THISCALL_WRAPPER(GetDriverName,8)
 HIDDEN void STDMETHODCALLTYPE GetDriverName(LPWINEASIO iface, char *name)
 {
     TRACE("iface: %p, name: %p\n", iface, name);
@@ -527,8 +465,6 @@ HIDDEN void STDMETHODCALLTYPE GetDriverName(LPWINEASIO iface, char *name)
  * LONG GetDriverVersion (void);
  *  Function:    Returns the driver version number
  */
-
-DEFINE_THISCALL_WRAPPER(GetDriverVersion,4)
 HIDDEN LONG STDMETHODCALLTYPE GetDriverVersion(LPWINEASIO iface)
 {
     IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -541,8 +477,6 @@ HIDDEN LONG STDMETHODCALLTYPE GetDriverVersion(LPWINEASIO iface)
  * void GetErrorMessage(char *string);
  *  Function:    Returns an error message for the last occured error in string
  */
-
-DEFINE_THISCALL_WRAPPER(GetErrorMessage,8)
 HIDDEN void STDMETHODCALLTYPE GetErrorMessage(LPWINEASIO iface, char *string)
 {
     TRACE("iface: %p, string: %p)\n", iface, string);
@@ -556,8 +490,6 @@ HIDDEN void STDMETHODCALLTYPE GetErrorMessage(LPWINEASIO iface, char *string)
  *  Returns:     ASE_NotPresent if IO is missing
  *               ASE_HWMalfunction if JACK fails to start
  */
-
-DEFINE_THISCALL_WRAPPER(Start,4)
 HIDDEN ASIOError STDMETHODCALLTYPE Start(LPWINEASIO iface)
 {
     IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -617,8 +549,6 @@ HIDDEN ASIOError STDMETHODCALLTYPE Start(LPWINEASIO iface)
  *  Returns:    ASE_NotPresent on missing IO
  *  Note:       BufferSwitch() must not called after returning
  */
-
-DEFINE_THISCALL_WRAPPER(Stop,4)
 HIDDEN ASIOError STDMETHODCALLTYPE Stop(LPWINEASIO iface)
 {
     IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -639,8 +569,6 @@ HIDDEN ASIOError STDMETHODCALLTYPE Stop(LPWINEASIO iface)
  *  Parameters: numInputChannels and numOutputChannels will hold number of channels on returning
  *  Returns:    ASE_NotPresent if no channels are available, otherwise AES_OK
  */
-
-DEFINE_THISCALL_WRAPPER(GetChannels,12)
 HIDDEN ASIOError STDMETHODCALLTYPE GetChannels (LPWINEASIO iface, LONG *numInputChannels, LONG *numOutputChannels)
 {
     IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -659,8 +587,6 @@ HIDDEN ASIOError STDMETHODCALLTYPE GetChannels (LPWINEASIO iface, LONG *numInput
  *  Function:   Return latency in frames
  *  Returns:    ASE_NotPresent if no IO is available, otherwise AES_OK
  */
-
-DEFINE_THISCALL_WRAPPER(GetLatencies,12)
 HIDDEN ASIOError STDMETHODCALLTYPE GetLatencies(LPWINEASIO iface, LONG *inputLatency, LONG *outputLatency)
 {
     IWineASIOImpl           *This = (IWineASIOImpl*)iface;
@@ -687,8 +613,6 @@ HIDDEN ASIOError STDMETHODCALLTYPE GetLatencies(LPWINEASIO iface, LONG *inputLat
  *               At the moment return all the same, and granularity 0
  *  Returns:    ASE_NotPresent on missing IO
  */
-
-DEFINE_THISCALL_WRAPPER(GetBufferSize,20)
 HIDDEN ASIOError STDMETHODCALLTYPE GetBufferSize(LPWINEASIO iface, LONG *minSize, LONG *maxSize, LONG *preferredSize, LONG *granularity)
 {
     IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -720,8 +644,6 @@ HIDDEN ASIOError STDMETHODCALLTYPE GetBufferSize(LPWINEASIO iface, LONG *minSize
  *  Function:   Ask if specific SR is available
  *  Returns:    ASE_NoClock if SR isn't available, ASE_NotPresent on missing IO
  */
-
-DEFINE_THISCALL_WRAPPER(CanSampleRate,12)
 HIDDEN ASIOError STDMETHODCALLTYPE CanSampleRate(LPWINEASIO iface, ASIOSampleRate sampleRate)
 {
     IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -739,8 +661,6 @@ HIDDEN ASIOError STDMETHODCALLTYPE CanSampleRate(LPWINEASIO iface, ASIOSampleRat
  *  Parameters: currentRate will hold SR on return, 0 if unknown
  *  Returns:    ASE_NoClock if SR is unknown, ASE_NotPresent on missing IO
  */
-
-DEFINE_THISCALL_WRAPPER(GetSampleRate,8)
 HIDDEN ASIOError STDMETHODCALLTYPE GetSampleRate(LPWINEASIO iface, ASIOSampleRate *sampleRate)
 {
     IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -761,8 +681,6 @@ HIDDEN ASIOError STDMETHODCALLTYPE GetSampleRate(LPWINEASIO iface, ASIOSampleRat
  *              ASE_InvalidMode if current clock is external and SR != 0
  *              ASE_NotPresent on missing IO
  */
-
-DEFINE_THISCALL_WRAPPER(SetSampleRate,12)
 HIDDEN ASIOError STDMETHODCALLTYPE SetSampleRate(LPWINEASIO iface, ASIOSampleRate sampleRate)
 {
     IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -782,8 +700,6 @@ HIDDEN ASIOError STDMETHODCALLTYPE SetSampleRate(LPWINEASIO iface, ASIOSampleRat
  *                         - on return: number of clock sources, the minimum is 1 - the internal clock
  *  Returns:    ASE_NotPresent on missing IO
  */
-
-DEFINE_THISCALL_WRAPPER(GetClockSources,12)
 HIDDEN ASIOError STDMETHODCALLTYPE GetClockSources(LPWINEASIO iface, ASIOClockSource *clocks, LONG *numSources)
 {
     TRACE("iface: %p, clocks: %p, numSources: %p\n", iface, clocks, numSources);
@@ -808,8 +724,6 @@ HIDDEN ASIOError STDMETHODCALLTYPE GetClockSources(LPWINEASIO iface, ASIOClockSo
  *              ASE_InvalidMode may be returned if a clock can't be selected
  *              ASE_NoClock should not be returned
  */
-
-DEFINE_THISCALL_WRAPPER(SetClockSource,8)
 HIDDEN ASIOError STDMETHODCALLTYPE SetClockSource(LPWINEASIO iface, LONG index)
 {
     TRACE("iface: %p, index: %i\n", iface, index);
@@ -827,8 +741,6 @@ HIDDEN ASIOError STDMETHODCALLTYPE SetClockSource(LPWINEASIO iface, LONG index)
  *  Return:     ASE_NotPresent on missing IO
  *              ASE_SPNotAdvancing on missing clock
  */
-
-DEFINE_THISCALL_WRAPPER(GetSamplePosition,12)
 HIDDEN ASIOError STDMETHODCALLTYPE GetSamplePosition(LPWINEASIO iface, ASIOSamples *sPos, ASIOTimeStamp *tStamp)
 {
     IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -851,8 +763,6 @@ HIDDEN ASIOError STDMETHODCALLTYPE GetSamplePosition(LPWINEASIO iface, ASIOSampl
  *  Function:   Retrive channel info. - See asio.h for more detail
  *  Returns:    ASE_NotPresent on missing IO
  */
-
-DEFINE_THISCALL_WRAPPER(GetChannelInfo,8)
 HIDDEN ASIOError STDMETHODCALLTYPE GetChannelInfo(LPWINEASIO iface, ASIOChannelInfo *info)
 {
     IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -890,8 +800,6 @@ HIDDEN ASIOError STDMETHODCALLTYPE GetChannelInfo(LPWINEASIO iface, ASIOChannelI
  *              ASE_InvalidMode on unsupported bufferSize or invalid bufferInfo data
  *              ASE_NotPresent on missing IO
  */
-
-DEFINE_THISCALL_WRAPPER(CreateBuffers,20)
 HIDDEN ASIOError STDMETHODCALLTYPE CreateBuffers(LPWINEASIO iface, ASIOBufferInfo *bufferInfo, LONG numChannels, LONG bufferSize, ASIOCallbacks *asioCallbacks)
 {
     IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -1065,8 +973,6 @@ HIDDEN ASIOError STDMETHODCALLTYPE CreateBuffers(LPWINEASIO iface, ASIOBufferInf
  *              ASE_NotPresent on missing IO
  *  Implies:    ASIOStop()
  */
-
-DEFINE_THISCALL_WRAPPER(DisposeBuffers,4)
 HIDDEN ASIOError STDMETHODCALLTYPE DisposeBuffers(LPWINEASIO iface)
 {
     IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -1109,8 +1015,6 @@ HIDDEN ASIOError STDMETHODCALLTYPE DisposeBuffers(LPWINEASIO iface)
  *  Returns:    ASE_NotPresent if no control panel exists.  Actually return code should be ignored
  *  Note:       Call the asioMessage callback if something has changed
  */
-
-DEFINE_THISCALL_WRAPPER(ControlPanel,4)
 HIDDEN ASIOError STDMETHODCALLTYPE ControlPanel(LPWINEASIO iface)
 {
     static char arg0[] = "wineasio-settings\0";
@@ -1133,8 +1037,6 @@ HIDDEN ASIOError STDMETHODCALLTYPE ControlPanel(LPWINEASIO iface)
  *              ASE_InvalidParameter if function is unsupported to disable further calls
  *              ASE_SUCCESS on success, do not use AES_OK
  */
-
-DEFINE_THISCALL_WRAPPER(Future,12)
 HIDDEN ASIOError STDMETHODCALLTYPE Future(LPWINEASIO iface, LONG selector, void *opt)
 {
     IWineASIOImpl           *This = (IWineASIOImpl *) iface;
@@ -1214,8 +1116,6 @@ HIDDEN ASIOError STDMETHODCALLTYPE Future(LPWINEASIO iface, LONG selector, void 
  *  Returns:    ASE_OK if supported
  *              ASE_NotPresent to disable
  */
-
-DEFINE_THISCALL_WRAPPER(OutputReady,4)
 HIDDEN ASIOError STDMETHODCALLTYPE OutputReady(LPWINEASIO iface)
 {
     /* disabled to stop stand alone NI programs from spamming the console
