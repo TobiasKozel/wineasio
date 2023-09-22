@@ -26,24 +26,6 @@ static VOID configure_driver(IWineASIOImpl *This)
     WCHAR   *application_name;
     char    environment_variable[MAX_ENVIRONMENT_SIZE];
 
-    /* Unicode strings used for the registry */
-    static const WCHAR key_software_wine_wineasio[] =
-        { 'S','o','f','t','w','a','r','e','\\',
-          'W','i','n','e','\\',
-          'W','i','n','e','A','S','I','O',0 };
-    static const WCHAR value_wineasio_number_inputs[] =
-        { 'N','u','m','b','e','r',' ','o','f',' ','i','n','p','u','t','s',0 };
-    static const WCHAR value_wineasio_number_outputs[] =
-        { 'N','u','m','b','e','r',' ','o','f',' ','o','u','t','p','u','t','s',0 };
-    static const WCHAR value_wineasio_fixed_buffersize[] =
-        { 'F','i','x','e','d',' ','b','u','f','f','e','r','s','i','z','e',0 };
-    static const WCHAR value_wineasio_preferred_buffersize[] =
-        { 'P','r','e','f','e','r','r','e','d',' ','b','u','f','f','e','r','s','i','z','e',0 };
-    static const WCHAR wineasio_autostart_server[] =
-        { 'A','u','t','o','s','t','a','r','t',' ','s','e','r','v','e','r',0 };
-    static const WCHAR value_wineasio_connect_to_hardware[] =
-        { 'C','o','n','n','e','c','t',' ','t','o',' ','h','a','r','d','w','a','r','e',0 };
-
     /* Initialise most member variables,
      * asio_sample_position, asio_time, & asio_time_stamp are initialized in Start()
      * jack_num_input_ports & jack_num_output_ports are initialized in Init() */
