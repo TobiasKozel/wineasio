@@ -1,31 +1,31 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "gdb",
-            "request": "attach",
-            "name": "Build & Debug",
-            "target": ":11111",
-            "remote": true,
-            "cwd": "${workspaceRoot}",
-            "env": {
-                "WINEPREFIX": "${workspaceRoot}/prefix_debug"
-            },
-            "preLaunchTask": "build_and_debug",
-            "postDebugTask": "kill_debug"
-        },
-        {
-            "type": "gdb",
-            "request": "launch",
-            "name": "broken",
-            "cwd": "${workspaceRoot}",
-            "target": "C:\\VBASIOTest64.exe",
-            "gdbpath": "winedbg",
-            "env": {
-                "WINEPREFIX": "${workspaceRoot}/prefix_debug"
-            },
-            "debugger_args": ["--gdb"],
-            "preLaunchTask": "make",
-        },
-    ]
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "gdb",
+			"request": "attach",
+			"name": "Build & Debug",
+			"target": ":11111",
+			"remote": true,
+			"cwd": "${workspaceRoot}",
+			"env": {
+				"WINEPREFIX": "${workspaceRoot}/prefix_debug"
+			},
+			"preLaunchTask": "build_and_debug",
+			"postDebugTask": "kill_debug"
+		},
+		{
+			"type": "gdb",
+			"request": "launch",
+			"name": "broken",
+			"cwd": "${workspaceRoot}",
+			"target": "C:\\VBASIOTest64.exe",
+			"gdbpath": "winedbg",
+			"env": {
+				"WINEPREFIX": "${workspaceRoot}/prefix_debug"
+			},
+			"debugger_args": ["--gdb"],
+			"preLaunchTask": "make",
+		},
+	]
 }
