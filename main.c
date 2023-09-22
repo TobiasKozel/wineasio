@@ -29,9 +29,7 @@
 #endif
 /* WINE_DEFAULT_DEBUG_CHANNEL(asio); */
 
-/* {48D0C522-BFCC-45cc-8B84-17F25F33E6E9} */
-static GUID const CLSID_WineASIO = {
-0x48d0c522, 0xbfcc, 0x45cc, { 0x8b, 0x84, 0x17, 0xf2, 0x5f, 0x33, 0xe6, 0xe9 } };
+#include "./constants.h"
 
 typedef struct {
     const IClassFactoryVtbl * lpVtbl;
@@ -138,16 +136,6 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
         /* WARN("no interface for %s\n", debugstr_guid(riid)); */
         return E_NOINTERFACE;
     }
-    unsigned int a1 = ((unsigned int *)rclsid)[0];
-    unsigned int b1 = ((unsigned int *)&CLSID_WineASIO)[0];
-    
-    unsigned int a2 = ((unsigned int *)rclsid)[1];
-    unsigned int b2 = ((unsigned int *)&CLSID_WineASIO)[1];
-    unsigned int a3 = ((unsigned int *)rclsid)[2];
-    unsigned int b3 = ((unsigned int *)&CLSID_WineASIO)[2];
-    
-    unsigned int a4 = ((unsigned int *)rclsid)[3];
-    unsigned int b4 = ((unsigned int *)&CLSID_WineASIO)[3];
 
     if (IsEqualGUID(rclsid, &CLSID_WineASIO))
     {
