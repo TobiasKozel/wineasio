@@ -1,27 +1,39 @@
 #ifndef _JACK_FUNCTIONS
 #define _JACK_FUNCTIONS
 
+#include <jack/types.h>
 #include <limits.h>
 #include <pthread.h>
 
 #include "./interface.h"
 #include "./debug.h"
 
+/**
+ * Called from jack when the buffer size changes
+ * called from an arbitray thread, this causes issues with wine.
+ */
 static inline int jack_buffer_size_callback(jack_nframes_t nframes, void* arg) {
   IWineASIOImpl* This = (IWineASIOImpl*)arg;
-  LONG canReset;
   if (This->asio_driver_state != Running) return 0;
 
-  TRACE("Buffer Size changed to %u", nframes);
+  TRACE("Request Buffer Size change to %u", nframes);
 
-  canReset = This->asio_callbacks->asioMessage(kAsioSelectorSupported,
-                                               kAsioResetRequest, 0, 0);
+  for (int i = 0; i < DISPATCHER_QUEUE_SIZE; i++) {
+    if (This->dispatcher_queue[i].type == DispatcherTypes_none) {
+      This->dispatcher_queue[i].parameter = nframes;
+      This->dispatcher_queue[i].type = DispatcherTypes_buffer_size;
+      return 0;
+    }
+  }
 
-  if (canReset) This->asio_callbacks->asioMessage(kAsioResetRequest, 0, 0, 0);
-
-  return 0;
+  ERR("Dispatcher queue full.");
+  return JackFailure;
 }
 
+/**
+ * Called from jack when the latency changes
+ * called from an arbitray thread, this causes issues with wine.
+ */
 static inline void jack_latency_callback(jack_latency_callback_mode_t mode,
                                          void* arg) {
   IWineASIOImpl* This = (IWineASIOImpl*)arg;
@@ -29,27 +41,43 @@ static inline void jack_latency_callback(jack_latency_callback_mode_t mode,
   if (This->asio_driver_state != Running) return;
 
   if (mode == JackCaptureLatency) {
-    TRACE("Latency changed for JackCaptureLatency");
+    TRACE("Request Latency change for JackCaptureLatency");
   } else {
-    TRACE("Latency changed for JackPlaybackLatency");
+    TRACE("Request Latency change for JackPlaybackLatency");
   }
 
-  if (This->asio_callbacks->asioMessage(kAsioSelectorSupported,
-                                        kAsioLatenciesChanged, 0, 0))
-    This->asio_callbacks->asioMessage(kAsioLatenciesChanged, 0, 0, 0);
+  for (int i = 0; i < DISPATCHER_QUEUE_SIZE; i++) {
+    if (This->dispatcher_queue[i].type == DispatcherTypes_none) {
+      This->dispatcher_queue[i].type = DispatcherTypes_latency;
+      return;
+    }
+  }
 
+  ERR("Dispatcher queue full.");
   return;
 }
 
+/**
+ * Called from jack when the sample rate changes
+ * called from an arbitray thread, this causes issues with wine.
+ */
 static inline int jack_sample_rate_callback(jack_nframes_t nframes, void* arg) {
   IWineASIOImpl* This = (IWineASIOImpl*)arg;
 
   if (This->asio_driver_state != Running) return 0;
 
-  This->asio_sample_rate = nframes;
-  TRACE("Sample rate changed to %f", This->asio_sample_rate);
-  This->asio_callbacks->sampleRateDidChange(nframes);
-  return 0;
+  TRACE("Request Sample rate change to %i", nframes);
+
+  for (int i = 0; i < DISPATCHER_QUEUE_SIZE; i++) {
+    if (This->dispatcher_queue[i].type == DispatcherTypes_none) {
+      This->dispatcher_queue[i].parameter = nframes;
+      This->dispatcher_queue[i].type = DispatcherTypes_sample_rate;
+      return 0;
+    }
+  }
+
+  ERR("Dispatcher queue full.");
+  return JackFailure;
 }
 
 #ifdef DEBUG
@@ -67,6 +95,30 @@ static inline int jack_process_callback(jack_nframes_t nframes, void* arg) {
   jack_transport_state_t jack_transport_state;
   jack_position_t jack_position;
   DWORD time;
+
+  for (int i = 0; i < DISPATCHER_QUEUE_SIZE; i++) {
+    switch (This->dispatcher_queue[i].type) {
+      case DispatcherTypes_none:
+        continue;
+      case DispatcherTypes_buffer_size:
+        if (This->asio_callbacks->asioMessage(kAsioSelectorSupported,
+                                              kAsioResetRequest, 0, 0)) {
+          This->asio_callbacks->asioMessage(kAsioResetRequest, 0, 0, 0);
+        }
+        break;
+      case DispatcherTypes_latency:
+        if (This->asio_callbacks->asioMessage(kAsioSelectorSupported,
+                                              kAsioLatenciesChanged, 0, 0))
+          This->asio_callbacks->asioMessage(kAsioLatenciesChanged, 0, 0, 0);
+        break;
+      case DispatcherTypes_sample_rate:
+        This->asio_sample_rate = nframes;
+        This->asio_callbacks->sampleRateDidChange(
+            This->dispatcher_queue[i].parameter);
+        break;
+    }
+    This->dispatcher_queue[i].type = DispatcherTypes_none;
+  }
 
   /* output silence if the ASIO callback isn't running yet */
   if (This->asio_driver_state != Running) {
@@ -143,24 +195,28 @@ static inline int jack_process_callback(jack_nframes_t nframes, void* arg) {
  *  Support functions
  */
 
-/*
- *  Jack callbacks
+/**
+ * internal helper function for returning the posix thread_id of the newly
+ * created callback thread
  */
-
-/* internal helper function for returning the posix thread_id of the newly
- * created callback thread */
-static DWORD WINAPI jack_thread_creator_helper(LPVOID arg) {
+static DWORD WINAPI jack_wine_callback_thread(LPVOID arg) {
   jack_thread_creator_privates.jack_callback_pthread_id = pthread_self();
-  TRACE("SetEvent");
+  TRACE("wine jack thread started");
   SetEvent(jack_thread_creator_privates.jack_callback_thread_created);
+
+  // This function will block until the asio driver is closed.
   jack_thread_creator_privates.jack_callback_thread(
       jack_thread_creator_privates.arg);
+
+  TRACE("wine jack thread stopped");
   return 0;
 }
 
-/* Function called by JACK to create a thread in the wine process context,
- *  uses the global structure jack_thread_creator_privates to communicate with
- * jack_thread_creator_helper() */
+/**
+ * Function called by JACK to create a thread in the wine process context,
+ * uses the global structure jack_thread_creator_privates to communicate with
+ * jack_thread_creator_helper()
+ */
 static int jack_thread_creator(pthread_t* thread_id, const pthread_attr_t* attr,
                                void* (*function)(void*), void* arg) {
   TRACE("arg: %p, thread: %lu, attr: %p, function: %p", arg, *thread_id, attr,
@@ -170,7 +226,7 @@ static int jack_thread_creator(pthread_t* thread_id, const pthread_attr_t* attr,
   jack_thread_creator_privates.arg = arg;
   jack_thread_creator_privates.jack_callback_thread_created =
       CreateEventW(NULL, FALSE, FALSE, NULL);
-  CreateThread(NULL, 0, jack_thread_creator_helper, arg, 0, 0);
+  CreateThread(NULL, 0, jack_wine_callback_thread, arg, 0, 0);
   WaitForSingleObject(jack_thread_creator_privates.jack_callback_thread_created,
                       INFINITE);
   *thread_id = jack_thread_creator_privates.jack_callback_pthread_id;

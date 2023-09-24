@@ -35,6 +35,21 @@ struct {
 
 enum { Loaded, Initialized, Prepared, Running };
 
+/**
+ * TODO
+ */
+enum DispatcherTypes {
+  DispatcherTypes_none = 0,
+  DispatcherTypes_buffer_size,
+  DispatcherTypes_latency,
+  DispatcherTypes_sample_rate
+};
+
+struct DispatcherAction {
+  enum DispatcherTypes type;
+  jack_nframes_t parameter;
+};
+
 /*****************************************************************************
  * IWineAsio interface
  */
@@ -137,6 +152,8 @@ typedef struct IWineASIOImpl {
   jack_default_audio_sample_t* callback_audio_buffer;
   IOChannel* input_channel;
   IOChannel* output_channel;
+
+  struct DispatcherAction dispatcher_queue[DISPATCHER_QUEUE_SIZE];
 } IWineASIOImpl;
 
 /****************************************************************************
