@@ -42,6 +42,11 @@
 			"label": "launch_cmd",
 			"type": "shell",
 			"command": "${workspaceRoot}/.vscode/launch_cmd.sh"
+		},
+		{
+			"label": "launch_asio_test",
+			"type": "shell",
+			"command": "${workspaceRoot}/.vscode/launch_asio_test.sh"
 		}
 	]
 }

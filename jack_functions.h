@@ -15,6 +15,8 @@ static inline int jack_buffer_size_callback(jack_nframes_t nframes, void *arg)
 
 	if (This->asio_callbacks->asioMessage(kAsioSelectorSupported, kAsioResetRequest, 0 , 0))
 		This->asio_callbacks->asioMessage(kAsioResetRequest, 0, 0, 0);
+
+	TRACE("Buffer Size changed to %u", nframes);
 	return 0;
 }
 
@@ -27,6 +29,12 @@ static inline void jack_latency_callback(jack_latency_callback_mode_t mode, void
 
 	if (This->asio_callbacks->asioMessage(kAsioSelectorSupported, kAsioLatenciesChanged, 0 , 0))
 		This->asio_callbacks->asioMessage(kAsioLatenciesChanged, 0, 0, 0);
+	
+	if (mode == JackCaptureLatency) {
+		TRACE("Latency changed for JackCaptureLatency");
+	} else {
+		TRACE("Latency changed for JackPlaybackLatency");
+	}
 
 	return;
 }
@@ -102,11 +110,13 @@ static inline int jack_sample_rate_callback(jack_nframes_t nframes, void *arg)
 {
 	IWineASIOImpl   *This = (IWineASIOImpl*)arg;
 
+
 	if(This->asio_driver_state != Running)
 		return 0;
 
 	This->asio_sample_rate = nframes;
 	This->asio_callbacks->sampleRateDidChange(nframes);
+	TRACE("Sample rate changed to %f", This->asio_sample_rate);
 	return 0;
 }
 
@@ -122,7 +132,7 @@ static inline int jack_sample_rate_callback(jack_nframes_t nframes, void *arg)
 /* internal helper function for returning the posix thread_id of the newly created callback thread */
 static DWORD WINAPI jack_thread_creator_helper(LPVOID arg)
 {
-	TRACE("arg: %p\n", arg);
+	TRACE("arg: %p", arg);
 
 	jack_thread_creator_privates.jack_callback_pthread_id = pthread_self();
 	SetEvent(jack_thread_creator_privates.jack_callback_thread_created);
@@ -135,7 +145,7 @@ static DWORD WINAPI jack_thread_creator_helper(LPVOID arg)
  *  uses the global structure jack_thread_creator_privates to communicate with jack_thread_creator_helper() */
 static int jack_thread_creator(pthread_t* thread_id, const pthread_attr_t* attr, void *(*function)(void*), void* arg)
 {
-	TRACE("arg: %p, thread_id: %p, attr: %p, function: %p\n", arg, thread_id, attr, function);
+	TRACE("arg: %p, thread_id: %p, attr: %p, function: %p", arg, thread_id, attr, function);
 
 	jack_thread_creator_privates.jack_callback_thread = function;
 	jack_thread_creator_privates.arg = arg;

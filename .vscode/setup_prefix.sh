@@ -40,5 +40,3 @@ wine64 regsvr32 wineasiopw.dll
 cd ${PREFIX_PATH}/drive_c/
 wget https://download.vb-audio.com/Download_MT128/VBAsioTest_1014.zip
 unzip VBAsioTest_1014.zip
-
-wine64 ${PREFIX_PATH}/drive_c/VBASIOTest64.exe

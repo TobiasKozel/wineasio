@@ -42,10 +42,7 @@ INCLUDE_PATH         += -I/opt/wine-staging/include
 INCLUDE_PATH         += -I/opt/wine-staging/include/wine/windows
 LIBRARIES             = $(shell pkg-config --libs libpipewire-0.3) $(shell pkg-config --libs jack)
 
-# 64bit build needs an extra flag
-ifeq ($(M),64)
 CEXTRA               += -DNATIVE_INT64
-endif
 
 # Debug or Release
 ifeq ($(DEBUG),true)
@@ -58,7 +55,8 @@ endif
 
 wineasio_dll_C_SRCS   = asio.c \
 			main.c \
-			regsvr.c
+			regsvr.c \
+			debug.c
 wineasio_dll_LDFLAGS  = -shared \
 			-m$(M) \
 			-mnocygwin \

@@ -30,12 +30,8 @@
 #include "objbase.h"
 
 #include "./constants.h"
+#include "./debug.h"
 
-#ifdef DEBUG
-#include "wine/debug.h"
-#endif
-
-/* WINE_DEFAULT_DEBUG_CHANNEL(asio); */
 
 /*
  * Near the bottom of this file are the exported DllRegisterServer and
@@ -98,6 +94,8 @@ static HRESULT register_interfaces(struct regsvr_interface const *list)
 {
 	LONG res = ERROR_SUCCESS;
 	HKEY interface_key;
+
+	TRACE("register_interfaces...");
 
 	res = RegCreateKeyExW(HKEY_CLASSES_ROOT, interface_keyname, 0, NULL, 0,
 			  KEY_READ | KEY_WRITE, NULL, &interface_key, NULL);
@@ -168,6 +166,8 @@ static HRESULT unregister_interfaces(struct regsvr_interface const *list)
 {
 	LONG res = ERROR_SUCCESS;
 	HKEY interface_key;
+
+	TRACE("unregister_interfaces...");
 
 	res = RegOpenKeyExW(HKEY_CLASSES_ROOT, interface_keyname, 0,
 			KEY_READ | KEY_WRITE, &interface_key);
@@ -276,6 +276,8 @@ static HRESULT unregister_coclasses(struct regsvr_coclass const *list)
 	LONG res = ERROR_SUCCESS;
 	HKEY coclass_key;
 
+	TRACE("unregister_coclasses...");
+
 	res = RegOpenKeyExW(HKEY_CLASSES_ROOT, clsid_keyname, 0,
 			KEY_READ | KEY_WRITE, &coclass_key);
 	if (res == ERROR_FILE_NOT_FOUND) return S_OK;
@@ -312,6 +314,8 @@ static LONG register_key_guid(HKEY base, WCHAR const *name, GUID const *guid)
 {
 	WCHAR buf[39];
 
+	TRACE("register_key_guid...");
+
 	StringFromGUID2(guid, buf, 39);
 	return register_key_defvalueW(base, name, buf);
 }
@@ -326,6 +330,8 @@ static LONG register_key_defvalueW(
 {
 	LONG res;
 	HKEY key;
+
+	TRACE("register_key_defvalueW...");
 
 	res = RegCreateKeyExW(base, name, 0, NULL, 0,
 			  KEY_READ | KEY_WRITE, NULL, &key, NULL);
@@ -346,6 +352,8 @@ static LONG register_key_defvalueA(
 {
 	LONG res;
 	HKEY key;
+
+	TRACE("register_key_defvalueA...");
 
 	res = RegCreateKeyExW(base, name, 0, NULL, 0,
 			  KEY_READ | KEY_WRITE, NULL, &key, NULL);
@@ -368,6 +376,8 @@ static LONG register_progid(
 {
 	LONG res;
 	HKEY progid_key;
+
+	TRACE("register_progid...");
 
 	res = RegCreateKeyExA(HKEY_CLASSES_ROOT, progid, 0,
 			  NULL, 0, KEY_READ | KEY_WRITE, NULL,
@@ -416,6 +426,8 @@ static LONG recursive_delete_key(HKEY key)
 	DWORD cName;
 	HKEY subkey;
 
+	TRACE("recursive_delete_key...");
+
 	for (;;) {
 	cName = sizeof(subkey_name) / sizeof(WCHAR);
 	res = RegEnumKeyExW(key, 0, subkey_name, &cName,
@@ -446,6 +458,8 @@ static LONG recursive_delete_keyA(HKEY base, char const *name)
 	LONG res;
 	HKEY key;
 
+	TRACE("recursive_delete_keyA...");
+
 	res = RegOpenKeyExA(base, name, 0, KEY_READ | KEY_WRITE, &key);
 	if (res == ERROR_FILE_NOT_FOUND) return ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) return res;
@@ -461,6 +475,8 @@ static LONG recursive_delete_keyW(HKEY base, WCHAR const *name)
 {
 	LONG res;
 	HKEY key;
+
+	TRACE("recursive_delete_keyW...");
 
 	res = RegOpenKeyExW(base, name, 0, KEY_READ | KEY_WRITE, &key);
 	if (res == ERROR_FILE_NOT_FOUND) return ERROR_SUCCESS;
@@ -505,6 +521,8 @@ static HRESULT register_driver(void)
 	HKEY key;
 	LONG rc;
 
+	TRACE("register_driver...");
+
 	rc = RegOpenKeyExA(HKEY_LOCAL_MACHINE, asio_key, 0, KEY_READ | KEY_WRITE, &key);
 
 	if (rc != ERROR_SUCCESS)
@@ -530,7 +548,7 @@ HRESULT WINAPI DllRegisterServer(void)
 {
 	HRESULT hr;
 
-	/* TRACE("\n"); */
+	TRACE("DllRegisterServer...");
 
 	hr = register_coclasses(coclass_list);
 	if (SUCCEEDED(hr))
@@ -549,7 +567,10 @@ static HRESULT unregister_driver(void)
 {
 	LPCSTR asio_key = DRIVER_REG_PATH;
 
+	TRACE("unregister_driver...");
+
 	/* FIXME */
+	// fix what?
 	return recursive_delete_keyA(HKEY_LOCAL_MACHINE, asio_key);
 }
 
@@ -560,7 +581,7 @@ HRESULT WINAPI DllUnregisterServer(void)
 {
 	HRESULT hr;
 
-	/* TRACE("\n"); */
+	TRACE("DllUnregisterServer...");
 
 	hr = unregister_coclasses(coclass_list);
 	if (SUCCEEDED(hr))

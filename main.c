@@ -24,12 +24,8 @@
 #include "winreg.h"
 #include "objbase.h"
 
-#ifdef DEBUG
-#include "wine/debug.h"
-#endif
-/* WINE_DEFAULT_DEBUG_CHANNEL(asio); */
-
 #include "./constants.h"
+#include "./debug.h"
 
 typedef struct {
 	const IClassFactoryVtbl * lpVtbl;
@@ -44,6 +40,7 @@ extern HRESULT WINAPI WineASIOCreateInstance(REFIID riid, LPVOID *ppobj);
 
 static HRESULT WINAPI CF_QueryInterface(LPCLASSFACTORY iface, REFIID riid, LPVOID *ppobj)
 {
+	TRACE("CF_QueryInterface...");
 	/* IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
 	FIXME("(%p, %s, %p) stub!\n", This, debugstr_guid(riid), ppobj); */
 	if (ppobj == NULL)
@@ -55,7 +52,7 @@ static ULONG WINAPI CF_AddRef(LPCLASSFACTORY iface)
 {
 	IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
 	ULONG ref = InterlockedIncrement(&(This->ref));
-	/* TRACE("iface: %p, ref has been set to %x\n", This, ref); */
+	TRACE("iface: %p, ref has been set to %x", This, ref);
 	return ref;
 }
 
@@ -70,26 +67,24 @@ static ULONG WINAPI CF_Release(LPCLASSFACTORY iface)
 
 static HRESULT WINAPI CF_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pOuter, REFIID riid, LPVOID *ppobj)
 {
-	/* IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
-	TRACE("iface: %p, pOuter: %p, riid: %s, ppobj: %p)\n", This, pOuter, debugstr_guid(riid), ppobj); */
+	TRACE("iface: %p, pOuter: %p, riid: %p, ppobj: %p)", iface, pOuter, riid, ppobj);
 
 	if (pOuter)
 		return CLASS_E_NOAGGREGATION;
 
 	if (ppobj == NULL) {
-		/* WARN("invalid parameter\n"); */
+		WARN("invalid parameter");
 		return E_INVALIDARG;
 	}
 
 	*ppobj = NULL;
-	/* TRACE("Creating the WineASIO object\n"); */
+	TRACE("Creating the WineASIO object");
 	return WineASIOCreateInstance(riid, ppobj);
 }
 
 static HRESULT WINAPI CF_LockServer(LPCLASSFACTORY iface, BOOL dolock)
 {
-	/* IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
-	FIXME("iface: %p, dolock: %d) stub!\n", This, dolock); */
+	TRACE("iface: %p, dolock: %d) stub!", iface, dolock);
 	return S_OK;
 }
 
@@ -122,7 +117,7 @@ static IClassFactoryImpl WINEASIO_CF = { &CF_Vtbl, 1 };
  */
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
-	/* TRACE("rclsid: %s, riid: %s, ppv: %p)\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv); */
+	// TRACE("rclsid: %s, riid: %s, ppv: %p)\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
 
 	if (ppv == NULL) {
 		/* WARN("invalid parameter\n"); */
@@ -144,7 +139,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 		return S_OK;
 	}
 
-	/* WARN("rclsid: %s, riid: %s, ppv: %p): no class found.\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv); */
+	WARN("no class found.");
 	return CLASS_E_CLASSNOTAVAILABLE;
 }
 
@@ -159,7 +154,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
  */
 HRESULT WINAPI DllCanUnloadNow(void)
 {
-	/* FIXME("(void): stub\n"); */
+	TRACE("(void): stub");
 	return S_FALSE;
 }
 
@@ -172,19 +167,19 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 	switch (fdwReason) {
 	case DLL_PROCESS_ATTACH:
-/*        TRACE("DLL_PROCESS_ATTACH\n"); */
+		TRACE("DLL_PROCESS_ATTACH");
 		break;
 	case DLL_PROCESS_DETACH:
-/*        TRACE("DLL_PROCESS_DETACH\n"); */
+		TRACE("DLL_PROCESS_DETACH");
 		break;
 	case DLL_THREAD_ATTACH:
-/*        TRACE("DLL_THREAD_ATTACH\n"); */
+		TRACE("DLL_THREAD_ATTACH");
 		break;
 	case DLL_THREAD_DETACH:
-/*        TRACE("DLL_THREAD_DETACH\n"); */
+		TRACE("DLL_THREAD_DETACH");
 		break;
 	default:
-/*        TRACE("UNKNOWN REASON\n"); */
+		TRACE("UNKNOWN REASON");
 		break;
 	}
 	return TRUE;
