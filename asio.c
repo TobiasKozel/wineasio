@@ -332,7 +332,7 @@ HIDDEN ASIOError __thiscall Start(LPWINEASIO iface) {
     This->asio_callbacks->bufferSwitch(This->asio_buffer_index, ASIOTrue);
   }
 
-  /* swith asio buffer */
+  /* switch asio buffer */
   This->asio_buffer_index = This->asio_buffer_index ? 0 : 1;
 
   This->asio_driver_state = Running;

@@ -95,29 +95,43 @@ static inline int jack_process_callback(jack_nframes_t nframes, void* arg) {
   jack_transport_state_t jack_transport_state;
   jack_position_t jack_position;
   DWORD time;
+  int bail = 0;
 
-  for (int i = 0; i < DISPATCHER_QUEUE_SIZE; i++) {
+  for (i = 0; i < DISPATCHER_QUEUE_SIZE; i++) {
     switch (This->dispatcher_queue[i].type) {
       case DispatcherTypes_none:
         continue;
       case DispatcherTypes_buffer_size:
+        This->dispatcher_queue[i].type = DispatcherTypes_none;
+        bail = 1;
         if (This->asio_callbacks->asioMessage(kAsioSelectorSupported,
                                               kAsioResetRequest, 0, 0)) {
           This->asio_callbacks->asioMessage(kAsioResetRequest, 0, 0, 0);
         }
         break;
       case DispatcherTypes_latency:
+        bail = 1;
+        This->dispatcher_queue[i].type = DispatcherTypes_none;
         if (This->asio_callbacks->asioMessage(kAsioSelectorSupported,
                                               kAsioLatenciesChanged, 0, 0))
           This->asio_callbacks->asioMessage(kAsioLatenciesChanged, 0, 0, 0);
         break;
       case DispatcherTypes_sample_rate:
-        This->asio_sample_rate = nframes;
-        This->asio_callbacks->sampleRateDidChange(
-            This->dispatcher_queue[i].parameter);
+        bail = 1;
+        This->dispatcher_queue[i].type = DispatcherTypes_none;
+        // This->asio_sample_rate = nframes;
+        // This->asio_callbacks->sampleRateDidChange(
+        //     This->dispatcher_queue[i].parameter);
+        if (This->asio_callbacks->asioMessage(kAsioSelectorSupported,
+                                              kAsioResetRequest, 0, 0)) {
+          This->asio_callbacks->asioMessage(kAsioResetRequest, 0, 0, 0);
+        }
         break;
     }
-    This->dispatcher_queue[i].type = DispatcherTypes_none;
+  }
+
+  if (bail) {
+    return 0;
   }
 
   /* output silence if the ASIO callback isn't running yet */
@@ -201,12 +215,24 @@ static inline int jack_process_callback(jack_nframes_t nframes, void* arg) {
  */
 static DWORD WINAPI jack_wine_callback_thread(LPVOID arg) {
   jack_thread_creator_privates.jack_callback_pthread_id = pthread_self();
-  TRACE("wine jack thread started");
+  TRACE("wine jack callback thread started");
   SetEvent(jack_thread_creator_privates.jack_callback_thread_created);
 
   // This function will block until the asio driver is closed.
   jack_thread_creator_privates.jack_callback_thread(
       jack_thread_creator_privates.arg);
+
+  TRACE("wine jack thread stopped");
+  return 0;
+}
+
+static DWORD WINAPI jack_wine_control_thread(LPVOID arg) {
+  TRACE("wine jack control thread started");
+  SetEvent(arg);
+
+  // This function will block until the asio driver is closed.
+  // jack_thread_creator_privates.jack_callback_thread(
+  //     jack_thread_creator_privates.arg);
 
   TRACE("wine jack thread stopped");
   return 0;
@@ -219,6 +245,7 @@ static DWORD WINAPI jack_wine_callback_thread(LPVOID arg) {
  */
 static int jack_thread_creator(pthread_t* thread_id, const pthread_attr_t* attr,
                                void* (*function)(void*), void* arg) {
+  HANDLE control_thread_created;
   TRACE("arg: %p, thread: %lu, attr: %p, function: %p", arg, *thread_id, attr,
         function);
 
@@ -226,9 +253,13 @@ static int jack_thread_creator(pthread_t* thread_id, const pthread_attr_t* attr,
   jack_thread_creator_privates.arg = arg;
   jack_thread_creator_privates.jack_callback_thread_created =
       CreateEventW(NULL, FALSE, FALSE, NULL);
+  control_thread_created =
+      CreateEventW(NULL, FALSE, FALSE, NULL);
   CreateThread(NULL, 0, jack_wine_callback_thread, arg, 0, 0);
+  CreateThread(NULL, 0, jack_wine_control_thread, control_thread_created, 0, 0);
   WaitForSingleObject(jack_thread_creator_privates.jack_callback_thread_created,
                       INFINITE);
+  WaitForSingleObject(control_thread_created, INFINITE);
   *thread_id = jack_thread_creator_privates.jack_callback_pthread_id;
   return 0;
 }
