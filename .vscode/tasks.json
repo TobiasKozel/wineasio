@@ -21,7 +21,7 @@
 		{
 			"label": "format",
 			"type": "shell",
-			"command": "clang-format -i --style=Google --sort-includes=false asio.c main.c interface.h regsvr.c"
+			"command": "clang-format -i --style=Google --sort-includes=false *.c *.h"
 		},
 		{
 			"label": "setup_prefix",

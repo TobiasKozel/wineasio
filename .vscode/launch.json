@@ -2,6 +2,12 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"type": "lldb",
+			"request": "attach",
+			"name": "Attach",
+			"pid": "${command:pickMyProcess}" // use ${command:pickProcess} to pick other users' processes
+		},
+		{
 			"type": "gdb",
 			"request": "attach",
 			"name": "debug asio 64",
@@ -9,7 +15,8 @@
 			"remote": true,
 			"cwd": "${workspaceRoot}",
 			"preLaunchTask": "build_and_debug64",
-			"postDebugTask": "kill_debug"
+			"postDebugTask": "kill_debug",
+			"showDevDebugOutput": true
 		},
 		{
 			"type": "gdb",
@@ -32,17 +39,17 @@
 				"WINEPREFIX": "${workspaceRoot}/.vscode/prefix_debug"
 			},
 			"autorun": [
-				"set breakpoint pending on",
-				"set detach-on-fork off",
+				// "set breakpoint pending on",
+				// "set detach-on-fork off",
 				// "set follow-fork-mode child",
 				// "set solib-search-path '${workspaceRoot}/build64'",
 				"set solib-search-path '/usr/lib/wine/x86_64-unix/'"
 			],
-			"preLaunchTask": "make",
-			"postDebugTask": "kill_debug",
+			// "preLaunchTask": "kill_debug",
+			// "postDebugTask": "kill_debug",
 			"valuesFormatting": "parseText",
-			"showDevDebugOutput": true,
 			"printCalls": true,
+			"showDevDebugOutput": true
 		},
 		{
 			"type": "gdb",
