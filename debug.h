@@ -20,8 +20,14 @@
 
 	FILE* ensureLogFile();
 
-	#define TRACE(fmt, ...) {} fprintf(ensureLogFile(),   "TRACE %s:%i\t %s\t\t" fmt "\n",   __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); fflush(ensureLogFile())
-	#define WARN(fmt, ...) {}  fprintf(ensureLogFile(),   "WARN  %s:%i\t %s\t\t" fmt "\n",   __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); fflush(ensureLogFile())
-	#define ERR(fmt, ...) {}   fprintf(ensureLogFile(), "\nERROR %s:%i\t %s\t\t" fmt "\n\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); fflush(ensureLogFile())
+#ifdef __i386__
+	#define DEBUG_ARCH "32"
+#else
+	#define DEBUG_ARCH "64"
+#endif
+
+	#define TRACE(fmt, ...) {} fprintf(ensureLogFile(), DEBUG_ARCH   "TRACE %s:%i\t %s\t\t" fmt "\n",   __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); fflush(ensureLogFile())
+	#define WARN(fmt, ...) {}  fprintf(ensureLogFile(), DEBUG_ARCH   "WARN  %s:%i\t %s\t\t" fmt "\n",   __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); fflush(ensureLogFile())
+	#define ERR(fmt, ...) {}   fprintf(ensureLogFile(), DEBUG_ARCH "\nERROR %s:%i\t %s\t\t" fmt "\n\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); fflush(ensureLogFile())
 
 #endif // _DEBUG
