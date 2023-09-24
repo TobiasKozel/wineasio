@@ -137,6 +137,8 @@ HIDDEN ASIOBool __thiscall Init(LPWINEASIO iface, void* sysRef) {
   mlockall(MCL_FUTURE);
   configure_driver(This);
 
+  This->reset_requested = 0;
+
   if (!(This->jack_client = jack_client_open(This->jack_client_name,
                                              jack_options, &jack_status))) {
     WARN("Unable to open a JACK client as: %s", This->jack_client_name);

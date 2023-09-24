@@ -15,18 +15,8 @@
 static inline int jack_buffer_size_callback(jack_nframes_t nframes, void* arg) {
   IWineASIOImpl* This = (IWineASIOImpl*)arg;
   if (This->asio_driver_state != Running) return 0;
-
   TRACE("Request Buffer Size change to %u", nframes);
-
-  for (int i = 0; i < DISPATCHER_QUEUE_SIZE; i++) {
-    if (This->dispatcher_queue[i].type == DispatcherTypes_none) {
-      This->dispatcher_queue[i].parameter = nframes;
-      This->dispatcher_queue[i].type = DispatcherTypes_buffer_size;
-      return 0;
-    }
-  }
-
-  ERR("Dispatcher queue full.");
+  This->reset_requested = 1;
   return JackFailure;
 }
 
@@ -46,14 +36,7 @@ static inline void jack_latency_callback(jack_latency_callback_mode_t mode,
     TRACE("Request Latency change for JackPlaybackLatency");
   }
 
-  for (int i = 0; i < DISPATCHER_QUEUE_SIZE; i++) {
-    if (This->dispatcher_queue[i].type == DispatcherTypes_none) {
-      This->dispatcher_queue[i].type = DispatcherTypes_latency;
-      return;
-    }
-  }
-
-  ERR("Dispatcher queue full.");
+  This->reset_requested = 1;
   return;
 }
 
@@ -68,16 +51,8 @@ static inline int jack_sample_rate_callback(jack_nframes_t nframes, void* arg) {
 
   TRACE("Request Sample rate change to %i", nframes);
 
-  for (int i = 0; i < DISPATCHER_QUEUE_SIZE; i++) {
-    if (This->dispatcher_queue[i].type == DispatcherTypes_none) {
-      This->dispatcher_queue[i].parameter = nframes;
-      This->dispatcher_queue[i].type = DispatcherTypes_sample_rate;
-      return 0;
-    }
-  }
-
-  ERR("Dispatcher queue full.");
-  return JackFailure;
+  This->reset_requested = 1;
+  return 0;
 }
 
 #ifdef DEBUG
@@ -95,42 +70,13 @@ static inline int jack_process_callback(jack_nframes_t nframes, void* arg) {
   jack_transport_state_t jack_transport_state;
   jack_position_t jack_position;
   DWORD time;
-  int bail = 0;
 
-  for (i = 0; i < DISPATCHER_QUEUE_SIZE; i++) {
-    switch (This->dispatcher_queue[i].type) {
-      case DispatcherTypes_none:
-        continue;
-      case DispatcherTypes_buffer_size:
-        This->dispatcher_queue[i].type = DispatcherTypes_none;
-        bail = 1;
-        if (This->asio_callbacks->asioMessage(kAsioSelectorSupported,
+  if (This->reset_requested) {
+    This->reset_requested = 0;
+            if (This->asio_callbacks->asioMessage(kAsioSelectorSupported,
                                               kAsioResetRequest, 0, 0)) {
           This->asio_callbacks->asioMessage(kAsioResetRequest, 0, 0, 0);
         }
-        break;
-      case DispatcherTypes_latency:
-        bail = 1;
-        This->dispatcher_queue[i].type = DispatcherTypes_none;
-        if (This->asio_callbacks->asioMessage(kAsioSelectorSupported,
-                                              kAsioLatenciesChanged, 0, 0))
-          This->asio_callbacks->asioMessage(kAsioLatenciesChanged, 0, 0, 0);
-        break;
-      case DispatcherTypes_sample_rate:
-        bail = 1;
-        This->dispatcher_queue[i].type = DispatcherTypes_none;
-        // This->asio_sample_rate = nframes;
-        // This->asio_callbacks->sampleRateDidChange(
-        //     This->dispatcher_queue[i].parameter);
-        if (This->asio_callbacks->asioMessage(kAsioSelectorSupported,
-                                              kAsioResetRequest, 0, 0)) {
-          This->asio_callbacks->asioMessage(kAsioResetRequest, 0, 0, 0);
-        }
-        break;
-    }
-  }
-
-  if (bail) {
     return 0;
   }
 
