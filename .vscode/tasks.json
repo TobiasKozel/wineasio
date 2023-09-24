@@ -6,7 +6,7 @@
 		{
 			"label": "make",
 			"type": "shell",
-			"command": "make clean && make DEBUG=true",
+			"command": "make clean && make 32 64 DEBUG=true",
 			"problemMatcher": [],
 			"group": {
 				"kind": "build",
@@ -16,7 +16,7 @@
 		{
 			"label": "compile_commands",
 			"type": "shell",
-			"command": "bear -- make"
+			"command": "bear -- make 32"
 		},
 		{
 			"label": "format",
@@ -29,9 +29,14 @@
 			"command": "${workspaceRoot}/.vscode/setup_prefix.sh"
 		},
 		{
-			"label": "build_and_debug",
+			"label": "build_and_debug32",
 			"type": "shell",
-			"command": "${workspaceRoot}/.vscode/build_and_launch.sh",
+			"command": "${workspaceRoot}/.vscode/build_and_launch32.sh",
+		},
+		{
+			"label": "build_and_debug64",
+			"type": "shell",
+			"command": "${workspaceRoot}/.vscode/build_and_launch64.sh",
 		},
 		{
 			"label": "kill_debug",
@@ -42,11 +47,6 @@
 			"label": "launch_cmd",
 			"type": "shell",
 			"command": "${workspaceRoot}/.vscode/launch_cmd.sh"
-		},
-		{
-			"label": "launch_asio_test",
-			"type": "shell",
-			"command": "${workspaceRoot}/.vscode/launch_asio_test.sh"
 		}
 	]
 }

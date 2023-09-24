@@ -2,39 +2,29 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"type": "lldb",
-			"request": "launch",
-			"name": "Launch",
-			"program": "/usr/bin/wine64",
-			"args": ["C:\\VBASIOTest64.exe"],
-			"cwd": "${workspaceFolder}",
-			"env": {
-				"WINEPREFIX": "${workspaceRoot}/.vscode/prefix_debug"
-			},
-			"postDebugTask": "kill_debug",
-			"breakpointMode": "file",
-			"initCommands": [
-				// "set breakpoint pending on",
-				// "set detach-on-fork off",
-				// "set follow-fork-mode child",
-				// "set solib-search-path '${workspaceRoot}/build64'",
-				"settings append target.exec-search-paths '/usr/lib/wine/x86_64-unix/'"
-			],
+			"type": "gdb",
+			"request": "attach",
+			"name": "debug asio 64",
+			"target": ":11111",
+			"remote": true,
+			"cwd": "${workspaceRoot}",
+			"preLaunchTask": "build_and_debug64",
+			"postDebugTask": "kill_debug"
 		},
 		{
 			"type": "gdb",
 			"request": "attach",
-			"name": "debug asio",
+			"name": "debug asio 32",
 			"target": ":11111",
 			"remote": true,
 			"cwd": "${workspaceRoot}",
-			"preLaunchTask": "build_and_debug",
+			"preLaunchTask": "build_and_debug32",
 			"postDebugTask": "kill_debug"
 		},
 		{
 			"type": "gdb",
 			"request": "launch",
-			"name": "debug jack",
+			"name": "debug jack (broken)",
 			"cwd": "${workspaceRoot}",
 			"target": "/usr/bin/wine64",
 			"arguments": "C:\\VBASIOTest64.exe",

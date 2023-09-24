@@ -8,6 +8,6 @@ export PIPEWIRE_LATENCY=256/48000
 wineserver -k
 
 make clean
-make DEBUG=true
-screen -dm winedbg --gdb --no-start --port 11111 C:\\VBASIOTest64.exe
+make 32 DEBUG=true
+screen -dm winedbg --gdb --no-start --port 11111 C:\\VBASIOTest32.exe
 sleep 1

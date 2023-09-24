@@ -10,6 +10,8 @@
 #include "asio.h"
 #define NATIVE_INT64
 
+#include "./win32_hack.h"
+
 /* Hide ELF symbols for the COM members - No need to to export them */
 #define HIDDEN __attribute__ ((visibility("hidden")))
 
@@ -155,27 +157,27 @@ static const IWineASIOVtbl WineASIO_Vtbl =
 	(void *) AddRef,
 	(void *) Release,
 
-	(void *) (Init),
-	(void *) (GetDriverName),
-	(void *) (GetDriverVersion),
-	(void *) (GetErrorMessage),
-	(void *) (Start),
-	(void *) (Stop),
-	(void *) (GetChannels),
-	(void *) (GetLatencies),
-	(void *) (GetBufferSize),
-	(void *) (CanSampleRate),
-	(void *) (GetSampleRate),
-	(void *) (SetSampleRate),
-	(void *) (GetClockSources),
-	(void *) (SetClockSource),
-	(void *) (GetSamplePosition),
-	(void *) (GetChannelInfo),
-	(void *) (CreateBuffers),
-	(void *) (DisposeBuffers),
-	(void *) (ControlPanel),
-	(void *) (Future),
-	(void *) (OutputReady)
+    (void *) THISCALL(Init),
+    (void *) THISCALL(GetDriverName),
+    (void *) THISCALL(GetDriverVersion),
+    (void *) THISCALL(GetErrorMessage),
+    (void *) THISCALL(Start),
+    (void *) THISCALL(Stop),
+    (void *) THISCALL(GetChannels),
+    (void *) THISCALL(GetLatencies),
+    (void *) THISCALL(GetBufferSize),
+    (void *) THISCALL(CanSampleRate),
+    (void *) THISCALL(GetSampleRate),
+    (void *) THISCALL(SetSampleRate),
+    (void *) THISCALL(GetClockSources),
+    (void *) THISCALL(SetClockSource),
+    (void *) THISCALL(GetSamplePosition),
+    (void *) THISCALL(GetChannelInfo),
+    (void *) THISCALL(CreateBuffers),
+    (void *) THISCALL(DisposeBuffers),
+    (void *) THISCALL(ControlPanel),
+    (void *) THISCALL(Future),
+    (void *) THISCALL(OutputReady)
 };
 
 

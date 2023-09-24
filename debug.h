@@ -20,8 +20,8 @@
 
 	FILE* ensureLogFile();
 
-	#define TRACE(fmt, ...) {} fprintf(ensureLogFile(),   "TRACE %s:%i\t %s\t\t" fmt "\n",   __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-	#define WARN(fmt, ...) {}  fprintf(ensureLogFile(),   "WARN  %s:%i\t %s\t\t" fmt "\n",   __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
-	#define ERR(fmt, ...) {}   fprintf(ensureLogFile(), "\nERROR %s:%i\t %s\t\t" fmt "\n\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+	#define TRACE(fmt, ...) {} fprintf(ensureLogFile(),   "TRACE %s:%i\t %s\t\t" fmt "\n",   __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); fflush(ensureLogFile())
+	#define WARN(fmt, ...) {}  fprintf(ensureLogFile(),   "WARN  %s:%i\t %s\t\t" fmt "\n",   __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); fflush(ensureLogFile())
+	#define ERR(fmt, ...) {}   fprintf(ensureLogFile(), "\nERROR %s:%i\t %s\t\t" fmt "\n\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); fflush(ensureLogFile())
 
 #endif // _DEBUG

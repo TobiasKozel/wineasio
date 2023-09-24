@@ -72,7 +72,7 @@ HIDDEN ULONG STDMETHODCALLTYPE AddRef(LPWINEASIO iface)
 	IWineASIOImpl   *This = (IWineASIOImpl *)iface;
 	ULONG           ref = InterlockedIncrement(&(This->ref));
 
-	TRACE("iface: %p, ref count is %d", iface, ref);
+	TRACE("iface: %p, ref count is %d", iface, (unsigned int) ref);
 	return ref;
 }
 
@@ -89,7 +89,7 @@ HIDDEN ULONG STDMETHODCALLTYPE Release(LPWINEASIO iface)
 	ULONG            ref = InterlockedDecrement(&This->ref);
 	int             i;
 
-	TRACE("iface: %p, ref count is %d", iface, ref);
+	TRACE("iface: %p, ref count is %d", iface, (int) ref);
 
 	if (This->asio_driver_state == Running)
 		Stop(iface);
@@ -112,7 +112,7 @@ HIDDEN ULONG STDMETHODCALLTYPE Release(LPWINEASIO iface)
 			This->output_channel[i].port = NULL;
 		}
 		This->asio_active_inputs = This->asio_active_outputs = 0;
-		TRACE("%i IOChannel structures released", This->wineasio_number_inputs + This->wineasio_number_outputs);
+		TRACE("%i IOChannel structures released", (int) (This->wineasio_number_inputs + This->wineasio_number_outputs));
 
 		jack_free (This->jack_output_ports);
 		jack_free (This->jack_input_ports);
@@ -133,6 +133,7 @@ HIDDEN ULONG STDMETHODCALLTYPE Release(LPWINEASIO iface)
  *              sysHanle is 0 on OS/X and on windows it contains the applications main window handle
  *  Returns:    ASIOFalse on error, and ASIOTrue on success
  */
+DEFINE_THISCALL_WRAPPER(Init,8)
 HIDDEN ASIOBool STDMETHODCALLTYPE Init(LPWINEASIO iface, void *sysRef)
 {
 	IWineASIOImpl   *This = (IWineASIOImpl *)iface;
@@ -159,11 +160,11 @@ HIDDEN ASIOBool STDMETHODCALLTYPE Init(LPWINEASIO iface, void *sysRef)
 	if (!This->input_channel)
 	{
 		jack_client_close(This->jack_client);
-		ERR("Unable to allocate IOChannel structures for %i channels", This->wineasio_number_inputs);
+		ERR("Unable to allocate IOChannel structures for %i channels", (int) This->wineasio_number_inputs);
 		return ASIOFalse;
 	}
 	This->output_channel = This->input_channel + This->wineasio_number_inputs;
-	TRACE("%i IOChannel structures allocated", This->wineasio_number_inputs + This->wineasio_number_outputs);
+	TRACE("%i IOChannel structures allocated", (int) (This->wineasio_number_inputs + This->wineasio_number_outputs));
 
 	/* Get and count physical JACK ports */
 	This->jack_input_ports = jack_get_ports(This->jack_client, NULL, NULL, JackPortIsPhysical | JackPortIsOutput);
@@ -192,7 +193,7 @@ HIDDEN ASIOBool STDMETHODCALLTYPE Init(LPWINEASIO iface, void *sysRef)
 			This->output_channel[i].port_name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, i);
 		TRACE("IOChannel structure initialized for output %d: '%s'", i, This->output_channel[i].port_name);
 	}
-	TRACE("%i IOChannel structures initialized", This->wineasio_number_inputs + This->wineasio_number_outputs);
+	TRACE("%i IOChannel structures initialized", (int) (This->wineasio_number_inputs + This->wineasio_number_outputs));
 
 	jack_set_thread_creator(jack_thread_creator);
 
@@ -238,6 +239,7 @@ HIDDEN ASIOBool STDMETHODCALLTYPE Init(LPWINEASIO iface, void *sysRef)
  * void GetDriverName(char *name);
  *  Function:    Returns the driver name in name
  */
+DEFINE_THISCALL_WRAPPER(GetDriverName, 8)
 HIDDEN void STDMETHODCALLTYPE GetDriverName(LPWINEASIO iface, char *name)
 {
 	TRACE("iface: %p, name: %p", iface, name);
@@ -249,6 +251,7 @@ HIDDEN void STDMETHODCALLTYPE GetDriverName(LPWINEASIO iface, char *name)
  * LONG GetDriverVersion (void);
  *  Function:    Returns the driver version number
  */
+DEFINE_THISCALL_WRAPPER(GetDriverVersion, 4)
 HIDDEN LONG STDMETHODCALLTYPE GetDriverVersion(LPWINEASIO iface)
 {
 	IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -261,6 +264,7 @@ HIDDEN LONG STDMETHODCALLTYPE GetDriverVersion(LPWINEASIO iface)
  * void GetErrorMessage(char *string);
  *  Function:    Returns an error message for the last occured error in string
  */
+DEFINE_THISCALL_WRAPPER(GetErrorMessage, 8)
 HIDDEN void STDMETHODCALLTYPE GetErrorMessage(LPWINEASIO iface, char *string)
 {
 	TRACE("iface: %p, string: %p)", iface, string);
@@ -274,6 +278,7 @@ HIDDEN void STDMETHODCALLTYPE GetErrorMessage(LPWINEASIO iface, char *string)
  *  Returns:     ASE_NotPresent if IO is missing
  *               ASE_HWMalfunction if JACK fails to start
  */
+DEFINE_THISCALL_WRAPPER(Start, 4)
 HIDDEN ASIOError STDMETHODCALLTYPE Start(LPWINEASIO iface)
 {
 	IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -333,6 +338,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE Start(LPWINEASIO iface)
  *  Returns:    ASE_NotPresent on missing IO
  *  Note:       BufferSwitch() must not called after returning
  */
+DEFINE_THISCALL_WRAPPER(Stop, 4)
 HIDDEN ASIOError STDMETHODCALLTYPE Stop(LPWINEASIO iface)
 {
 	IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -353,6 +359,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE Stop(LPWINEASIO iface)
  *  Parameters: numInputChannels and numOutputChannels will hold number of channels on returning
  *  Returns:    ASE_NotPresent if no channels are available, otherwise AES_OK
  */
+DEFINE_THISCALL_WRAPPER(GetChannels, 12)
 HIDDEN ASIOError STDMETHODCALLTYPE GetChannels (LPWINEASIO iface, LONG *numInputChannels, LONG *numOutputChannels)
 {
 	IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -362,7 +369,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE GetChannels (LPWINEASIO iface, LONG *numInput
 
 	*numInputChannels = This->wineasio_number_inputs;
 	*numOutputChannels = This->wineasio_number_outputs;
-	TRACE("iface: %p, inputs: %i, outputs: %i", iface, This->wineasio_number_inputs, This->wineasio_number_outputs);
+	TRACE("iface: %p, inputs: %i, outputs: %i", iface, (int) This->wineasio_number_inputs, (int) This->wineasio_number_outputs);
 	return ASE_OK;
 }
 
@@ -371,6 +378,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE GetChannels (LPWINEASIO iface, LONG *numInput
  *  Function:   Return latency in frames
  *  Returns:    ASE_NotPresent if no IO is available, otherwise AES_OK
  */
+DEFINE_THISCALL_WRAPPER(GetLatencies, 12)
 HIDDEN ASIOError STDMETHODCALLTYPE GetLatencies(LPWINEASIO iface, LONG *inputLatency, LONG *outputLatency)
 {
 	IWineASIOImpl           *This = (IWineASIOImpl*)iface;
@@ -386,7 +394,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE GetLatencies(LPWINEASIO iface, LONG *inputLat
 	*inputLatency = range.max;
 	jack_port_get_latency_range(This->output_channel[0].port, JackPlaybackLatency, &range);
 	*outputLatency = range.max;
-	TRACE("iface: %p, input latency: %d, output latency: %d", iface, *inputLatency, *outputLatency);
+	TRACE("iface: %p, input latency: %d, output latency: %d", iface, (int) *inputLatency, (int) *outputLatency);
 
 	return ASE_OK;
 }
@@ -397,6 +405,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE GetLatencies(LPWINEASIO iface, LONG *inputLat
  *               At the moment return all the same, and granularity 0
  *  Returns:    ASE_NotPresent on missing IO
  */
+DEFINE_THISCALL_WRAPPER(GetBufferSize, 20)
 HIDDEN ASIOError STDMETHODCALLTYPE GetBufferSize(LPWINEASIO iface, LONG *minSize, LONG *maxSize, LONG *preferredSize, LONG *granularity)
 {
 	IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -410,7 +419,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE GetBufferSize(LPWINEASIO iface, LONG *minSize
 	{
 		*minSize = *maxSize = *preferredSize = This->asio_current_buffersize;
 		*granularity = 0;
-		TRACE("Buffersize fixed at %i", This->asio_current_buffersize);
+		TRACE("Buffersize fixed at %i", (int) This->asio_current_buffersize);
 		return ASE_OK;
 	}
 
@@ -419,7 +428,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE GetBufferSize(LPWINEASIO iface, LONG *minSize
 	*preferredSize = This->wineasio_preferred_buffersize;
 	*granularity = -1;
 	TRACE("The ASIO host can control buffersize\nMinimum: %i, maximum: %i, preferred: %i, granularity: %i, current: %i",
-		  *minSize, *maxSize, *preferredSize, *granularity, This->asio_current_buffersize);
+		  (int) *minSize, (int) *maxSize, (int) *preferredSize, (int) *granularity, (int) This->asio_current_buffersize);
 	return ASE_OK;
 }
 
@@ -428,6 +437,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE GetBufferSize(LPWINEASIO iface, LONG *minSize
  *  Function:   Ask if specific SR is available
  *  Returns:    ASE_NoClock if SR isn't available, ASE_NotPresent on missing IO
  */
+DEFINE_THISCALL_WRAPPER(CanSampleRate, 12)
 HIDDEN ASIOError STDMETHODCALLTYPE CanSampleRate(LPWINEASIO iface, ASIOSampleRate sampleRate)
 {
 	IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -445,6 +455,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE CanSampleRate(LPWINEASIO iface, ASIOSampleRat
  *  Parameters: currentRate will hold SR on return, 0 if unknown
  *  Returns:    ASE_NoClock if SR is unknown, ASE_NotPresent on missing IO
  */
+DEFINE_THISCALL_WRAPPER(GetSampleRate, 8)
 HIDDEN ASIOError STDMETHODCALLTYPE GetSampleRate(LPWINEASIO iface, ASIOSampleRate *sampleRate)
 {
 	IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -465,6 +476,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE GetSampleRate(LPWINEASIO iface, ASIOSampleRat
  *              ASE_InvalidMode if current clock is external and SR != 0
  *              ASE_NotPresent on missing IO
  */
+DEFINE_THISCALL_WRAPPER(SetSampleRate, 12)
 HIDDEN ASIOError STDMETHODCALLTYPE SetSampleRate(LPWINEASIO iface, ASIOSampleRate sampleRate)
 {
 	IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -484,6 +496,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE SetSampleRate(LPWINEASIO iface, ASIOSampleRat
  *                         - on return: number of clock sources, the minimum is 1 - the internal clock
  *  Returns:    ASE_NotPresent on missing IO
  */
+DEFINE_THISCALL_WRAPPER(GetClockSources, 12)
 HIDDEN ASIOError STDMETHODCALLTYPE GetClockSources(LPWINEASIO iface, ASIOClockSource *clocks, LONG *numSources)
 {
 	TRACE("iface: %p, clocks: %p, numSources: %p", iface, clocks, numSources);
@@ -508,9 +521,10 @@ HIDDEN ASIOError STDMETHODCALLTYPE GetClockSources(LPWINEASIO iface, ASIOClockSo
  *              ASE_InvalidMode may be returned if a clock can't be selected
  *              ASE_NoClock should not be returned
  */
+DEFINE_THISCALL_WRAPPER(SetClockSource, 8)
 HIDDEN ASIOError STDMETHODCALLTYPE SetClockSource(LPWINEASIO iface, LONG index)
 {
-	TRACE("iface: %p, index: %i", iface, index);
+	TRACE("iface: %p, index: %i", iface, (int) index);
 
 	if (index != 0)
 		return ASE_NotPresent;
@@ -525,6 +539,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE SetClockSource(LPWINEASIO iface, LONG index)
  *  Return:     ASE_NotPresent on missing IO
  *              ASE_SPNotAdvancing on missing clock
  */
+DEFINE_THISCALL_WRAPPER(GetSamplePosition, 12)
 HIDDEN ASIOError STDMETHODCALLTYPE GetSamplePosition(LPWINEASIO iface, ASIOSamples *sPos, ASIOTimeStamp *tStamp)
 {
 	IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -547,6 +562,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE GetSamplePosition(LPWINEASIO iface, ASIOSampl
  *  Function:   Retrive channel info. - See asio.h for more detail
  *  Returns:    ASE_NotPresent on missing IO
  */
+DEFINE_THISCALL_WRAPPER(GetChannelInfo, 8)
 HIDDEN ASIOError STDMETHODCALLTYPE GetChannelInfo(LPWINEASIO iface, ASIOChannelInfo *info)
 {
 	IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -562,13 +578,13 @@ HIDDEN ASIOError STDMETHODCALLTYPE GetChannelInfo(LPWINEASIO iface, ASIOChannelI
 	{
 		info->isActive = This->input_channel[info->channel].active;
 		memcpy(info->name, This->input_channel[info->channel].port_name, ASIO_MAX_NAME_LENGTH);
-		TRACE("input %s is Acive: %i", info->name, info->isActive);
+		TRACE("input %s is Acive: %i", info->name, (int) info->isActive);
 	}
 	else
 	{
 		info->isActive = This->output_channel[info->channel].active;
 		memcpy(info->name, This->output_channel[info->channel].port_name, ASIO_MAX_NAME_LENGTH);
-		TRACE("output %s is Acive: %i", info->name, info->isActive);
+		TRACE("output %s is Acive: %i", info->name, (int) info->isActive);
 	}
 	return ASE_OK;
 }
@@ -585,13 +601,14 @@ HIDDEN ASIOError STDMETHODCALLTYPE GetChannelInfo(LPWINEASIO iface, ASIOChannelI
  *              ASE_InvalidMode on unsupported bufferSize or invalid bufferInfo data
  *              ASE_NotPresent on missing IO
  */
+DEFINE_THISCALL_WRAPPER(CreateBuffers, 20)
 HIDDEN ASIOError STDMETHODCALLTYPE CreateBuffers(LPWINEASIO iface, ASIOBufferInfo *bufferInfo, LONG numChannels, LONG bufferSize, ASIOCallbacks *asioCallbacks)
 {
 	IWineASIOImpl   *This = (IWineASIOImpl*)iface;
 	ASIOBufferInfo  *buffer_info = bufferInfo;
 	int             i, j, k;
 
-	TRACE("iface: %p, bufferInfo: %p, numChannels: %i, bufferSize: %i, asioCallbacks: %p", iface, bufferInfo, numChannels, bufferSize, asioCallbacks);
+	TRACE("iface: %p, bufferInfo: %p, numChannels: %i, bufferSize: %i, asioCallbacks: %p", iface, bufferInfo, (int) numChannels, (int) bufferSize, asioCallbacks);
 
 	if (This->asio_driver_state != Initialized)
 		return ASE_NotPresent;
@@ -625,7 +642,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE CreateBuffers(LPWINEASIO iface, ASIOBufferInf
 	{
 		if (This->asio_current_buffersize != bufferSize)
 			return ASE_InvalidMode;
-		TRACE("Buffersize fixed at %i", This->asio_current_buffersize);
+		TRACE("Buffersize fixed at %i", (int) This->asio_current_buffersize);
 	}
 	else
 	{ /* fail if not a power of two and if out of range */
@@ -633,24 +650,24 @@ HIDDEN ASIOError STDMETHODCALLTYPE CreateBuffers(LPWINEASIO iface, ASIOBufferInf
 				&& bufferSize >= ASIO_MINIMUM_BUFFERSIZE
 				&& bufferSize <= ASIO_MAXIMUM_BUFFERSIZE))
 		{
-			WARN("Invalid buffersize %i requested", bufferSize);
+			WARN("Invalid buffersize %i requested", (int) bufferSize);
 			return ASE_InvalidMode;
 		}
 		else
 		{
 			if (This->asio_current_buffersize == bufferSize)
 			{
-				TRACE("Buffer size already set to %i", This->asio_current_buffersize);
+				TRACE("Buffer size already set to %i", (int) This->asio_current_buffersize);
 			}
 			else
 			{
 				This->asio_current_buffersize = bufferSize;
 				if (jack_set_buffer_size(This->jack_client, This->asio_current_buffersize))
 				{
-					WARN("JACK is unable to set buffersize to %i", This->asio_current_buffersize);
+					WARN("JACK is unable to set buffersize to %i", (int) This->asio_current_buffersize);
 					return ASE_HWMalfunction;
 				}
-				TRACE("Buffer size changed to %i", This->asio_current_buffersize);
+				TRACE("Buffer size changed to %i", (int) This->asio_current_buffersize);
 			}
 		}
 	}
@@ -659,7 +676,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE CreateBuffers(LPWINEASIO iface, ASIOBufferInf
 	This->asio_callbacks = asioCallbacks;
 	This->asio_time_info_mode = This->asio_can_time_code = FALSE;
 
-	TRACE("The ASIO host supports ASIO v%i: ", This->asio_callbacks->asioMessage(kAsioEngineVersion, 0, 0, 0));
+	TRACE("The ASIO host supports ASIO v%i: ", (int) This->asio_callbacks->asioMessage(kAsioEngineVersion, 0, 0, 0));
 	if (This->asio_callbacks->asioMessage(kAsioSelectorSupported, kAsioBufferSizeChange, 0 , 0))
 		TRACE("kAsioBufferSizeChange ");
 	if (This->asio_callbacks->asioMessage(kAsioSelectorSupported, kAsioResetRequest, 0 , 0))
@@ -689,10 +706,10 @@ HIDDEN ASIOError STDMETHODCALLTYPE CreateBuffers(LPWINEASIO iface, ASIOBufferInf
 		(This->wineasio_number_inputs + This->wineasio_number_outputs) * 2 * This->asio_current_buffersize * sizeof(jack_default_audio_sample_t));
 	if (!This->callback_audio_buffer)
 	{
-		ERR("Unable to allocate %i ASIO audio buffers", This->wineasio_number_inputs + This->wineasio_number_outputs);
+		ERR("Unable to allocate %i ASIO audio buffers", (int) (This->wineasio_number_inputs + This->wineasio_number_outputs));
 		return ASE_NoMemory;
 	}
-	TRACE("%i ASIO audio buffers allocated (%i kB)", This->wineasio_number_inputs + This->wineasio_number_outputs,
+	TRACE("%i ASIO audio buffers allocated (%i kB)", (int) (This->wineasio_number_inputs + This->wineasio_number_outputs),
 		  (int) ((This->wineasio_number_inputs + This->wineasio_number_outputs) * 2 * This->asio_current_buffersize * sizeof(jack_default_audio_sample_t) / 1024));
 
 	for (i = 0; i < This->wineasio_number_inputs; i++)
@@ -719,7 +736,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE CreateBuffers(LPWINEASIO iface, ASIOBufferInf
 			buffer_info->buffers[1] = &This->input_channel[buffer_info->channelNum].audio_buffer[This->asio_current_buffersize];
 			This->input_channel[buffer_info->channelNum].active = ASIOTrue;
 			This->asio_active_inputs++;
-			TRACE("ASIO audio buffer for channel %i as input %i created", i, This->asio_active_inputs);
+			TRACE("ASIO audio buffer for channel %i as input %i created", i, (int) This->asio_active_inputs);
 		}
 		else
 		{
@@ -727,10 +744,10 @@ HIDDEN ASIOError STDMETHODCALLTYPE CreateBuffers(LPWINEASIO iface, ASIOBufferInf
 			buffer_info->buffers[1] = &This->output_channel[buffer_info->channelNum].audio_buffer[This->asio_current_buffersize];
 			This->output_channel[buffer_info->channelNum].active = ASIOTrue;
 			This->asio_active_outputs++;
-			TRACE("ASIO audio buffer for channel %i as output %i created", i, This->asio_active_outputs);
+			TRACE("ASIO audio buffer for channel %i as output %i created", i, (int) This->asio_active_outputs);
 		}
 	}
-	TRACE("%i audio channels initialized", This->asio_active_inputs + This->asio_active_outputs);
+	TRACE("%i audio channels initialized", (int) (This->asio_active_inputs + This->asio_active_outputs));
 
 	if (jack_activate(This->jack_client))
 		return ASE_NotPresent;
@@ -758,6 +775,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE CreateBuffers(LPWINEASIO iface, ASIOBufferInf
  *              ASE_NotPresent on missing IO
  *  Implies:    ASIOStop()
  */
+DEFINE_THISCALL_WRAPPER(DisposeBuffers, 4)
 HIDDEN ASIOError STDMETHODCALLTYPE DisposeBuffers(LPWINEASIO iface)
 {
 	IWineASIOImpl   *This = (IWineASIOImpl*)iface;
@@ -800,6 +818,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE DisposeBuffers(LPWINEASIO iface)
  *  Returns:    ASE_NotPresent if no control panel exists.  Actually return code should be ignored
  *  Note:       Call the asioMessage callback if something has changed
  */
+DEFINE_THISCALL_WRAPPER(ControlPanel,4)
 HIDDEN ASIOError STDMETHODCALLTYPE ControlPanel(LPWINEASIO iface)
 {
 	static char arg0[] = "wineasio-settings\0";
@@ -822,11 +841,12 @@ HIDDEN ASIOError STDMETHODCALLTYPE ControlPanel(LPWINEASIO iface)
  *              ASE_InvalidParameter if function is unsupported to disable further calls
  *              ASE_SUCCESS on success, do not use AES_OK
  */
+DEFINE_THISCALL_WRAPPER(Future, 12)
 HIDDEN ASIOError STDMETHODCALLTYPE Future(LPWINEASIO iface, LONG selector, void *opt)
 {
 	IWineASIOImpl           *This = (IWineASIOImpl *) iface;
 
-	TRACE("iface: %p, selector: %i, opt: %p", iface, selector, opt);
+	TRACE("iface: %p, selector: %i, opt: %p", iface, (int) selector, opt);
 
 	switch (selector)
 	{
@@ -901,6 +921,7 @@ HIDDEN ASIOError STDMETHODCALLTYPE Future(LPWINEASIO iface, LONG selector, void 
  *  Returns:    ASE_OK if supported
  *              ASE_NotPresent to disable
  */
+DEFINE_THISCALL_WRAPPER(OutputReady, 4)
 HIDDEN ASIOError STDMETHODCALLTYPE OutputReady(LPWINEASIO iface)
 {
 	/* disable this to stop stand alone NI programs from spamming the console */

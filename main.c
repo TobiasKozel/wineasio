@@ -52,7 +52,7 @@ static ULONG WINAPI CF_AddRef(LPCLASSFACTORY iface)
 {
 	IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
 	ULONG ref = InterlockedIncrement(&(This->ref));
-	TRACE("iface: %p, ref has been set to %x", This, ref);
+	TRACE("iface: %p, ref has been set to %x", This, (unsigned int) ref);
 	return ref;
 }
 
