@@ -17,6 +17,8 @@
 
 #endif // OLD_DEBUG
 	#include <stdio.h>
+	#include <unistd.h>
+	#include <pthread.h>
 
 	FILE* ensureLogFile();
 
@@ -26,8 +28,8 @@
 	#define DEBUG_ARCH "64"
 #endif
 
-	#define TRACE(fmt, ...) {} fprintf(ensureLogFile(), DEBUG_ARCH   "TRACE %s:%i\t %s\t\t" fmt "\n",   __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); fflush(ensureLogFile())
-	#define WARN(fmt, ...) {}  fprintf(ensureLogFile(), DEBUG_ARCH   "WARN  %s:%i\t %s\t\t" fmt "\n",   __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); fflush(ensureLogFile())
-	#define ERR(fmt, ...) {}   fprintf(ensureLogFile(), DEBUG_ARCH "\nERROR %s:%i\t %s\t\t" fmt "\n\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); fflush(ensureLogFile())
+	#define TRACE(fmt, ...) {} fprintf(ensureLogFile(), DEBUG_ARCH      " TRACE %lu %s:%i\t%s\t" fmt "\n",   pthread_self(), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); fflush(ensureLogFile()); fsync(fileno(ensureLogFile()))
+	#define WARN(fmt, ...) {}  fprintf(ensureLogFile(), DEBUG_ARCH      " WARN  %lu %s:%i\t%s\t" fmt "\n",   pthread_self(), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); fflush(ensureLogFile()); fsync(fileno(ensureLogFile()))
+	#define ERR(fmt, ...) {}   fprintf(ensureLogFile(), "\n" DEBUG_ARCH " ERROR %lu %s:%i\t%s\t" fmt "\n\n", pthread_self(), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); fflush(ensureLogFile()); fsync(fileno(ensureLogFile()))
 
 #endif // _DEBUG

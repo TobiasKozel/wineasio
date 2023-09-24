@@ -14,7 +14,7 @@ enable the [KXStudio repositories](https://kx.studio/Repositories) and install W
 
 
 ```sh
-make
+make 64 32
 ```
 
 

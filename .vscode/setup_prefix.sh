@@ -33,11 +33,15 @@ make 32 64 DEBUG=true
 # cleanup
 # sudo rm /usr/lib/wine/x86_64-windows/wineasiopw.dll
 # sudo rm /usr/lib/wine/x86_64-unix/wineasiopw.dll.so
-# sudo rm /usr/lib/wine/x86_64-windows/wineasiopw.dll
-# sudo rm /usr/lib/wine/x86_64-unix/wineasiopw.dll.so
+# sudo rm /usr/lib32/wine/i386-windows/wineasiopw.dll
+# sudo rm /usr/lib32/wine/i386-unix/wineasiopw.dll.so
 
-wine64 regsvr32 wineasiopw.dll
-regsvr32 wineasiopw.dll
+
+wine64 regsvr32 /usr/lib/wine/x86_64-windows/wineasiopw.dll
+regsvr32 /usr/lib32/wine/i386-windows/wineasiopw.dll
+
+# wine64 regsvr32 wineasiopw.dll
+# regsvr32 wineasiopw.dll
 
 cd ${PREFIX_PATH}/drive_c/
 wget https://download.vb-audio.com/Download_MT128/VBAsioTest_1014.zip

@@ -182,7 +182,7 @@ HIDDEN ASIOBool __thiscall Init(LPWINEASIO iface, void *sysRef)
 		snprintf(This->input_channel[i].port_name, ASIO_MAX_NAME_LENGTH, "in_%i", i + 1);
 		This->input_channel[i].port = jack_port_register(This->jack_client,
 			This->input_channel[i].port_name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, i);
-		TRACE("IOChannel structure initialized for input %d: '%s'", i, This->input_channel[i].port_name);
+		// TRACE("IOChannel structure initialized for input %d: '%s'", i, This->input_channel[i].port_name);
 	}
 	for (i = 0; i < This->wineasio_number_outputs; i++)
 	{
@@ -191,7 +191,7 @@ HIDDEN ASIOBool __thiscall Init(LPWINEASIO iface, void *sysRef)
 		snprintf(This->output_channel[i].port_name, ASIO_MAX_NAME_LENGTH, "out_%i", i + 1);
 		This->output_channel[i].port = jack_port_register(This->jack_client,
 			This->output_channel[i].port_name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, i);
-		TRACE("IOChannel structure initialized for output %d: '%s'", i, This->output_channel[i].port_name);
+		// TRACE("IOChannel structure initialized for output %d: '%s'", i, This->output_channel[i].port_name);
 	}
 	TRACE("%i IOChannel structures initialized", (int) (This->wineasio_number_inputs + This->wineasio_number_outputs));
 
@@ -578,13 +578,13 @@ HIDDEN ASIOError __thiscall GetChannelInfo(LPWINEASIO iface, ASIOChannelInfo *in
 	{
 		info->isActive = This->input_channel[info->channel].active;
 		memcpy(info->name, This->input_channel[info->channel].port_name, ASIO_MAX_NAME_LENGTH);
-		TRACE("input %s is Acive: %i", info->name, (int) info->isActive);
+		// TRACE("input %s is Acive: %i", info->name, (int) info->isActive);
 	}
 	else
 	{
 		info->isActive = This->output_channel[info->channel].active;
 		memcpy(info->name, This->output_channel[info->channel].port_name, ASIO_MAX_NAME_LENGTH);
-		TRACE("output %s is Acive: %i", info->name, (int) info->isActive);
+		// TRACE("output %s is Acive: %i", info->name, (int) info->isActive);
 	}
 	return ASE_OK;
 }
@@ -678,27 +678,27 @@ HIDDEN ASIOError __thiscall CreateBuffers(LPWINEASIO iface, ASIOBufferInfo *buff
 
 	TRACE("The ASIO host supports ASIO v%i: ", (int) This->asio_callbacks->asioMessage(kAsioEngineVersion, 0, 0, 0));
 	if (This->asio_callbacks->asioMessage(kAsioSelectorSupported, kAsioBufferSizeChange, 0 , 0))
-		TRACE("kAsioBufferSizeChange ");
+		TRACE("\tkAsioBufferSizeChange");
 	if (This->asio_callbacks->asioMessage(kAsioSelectorSupported, kAsioResetRequest, 0 , 0))
-		TRACE("kAsioResetRequest ");
+		TRACE("\tkAsioResetRequest");
 	if (This->asio_callbacks->asioMessage(kAsioSelectorSupported, kAsioResyncRequest, 0 , 0))
-		TRACE("kAsioResyncRequest ");
+		TRACE("\tkAsioResyncRequest");
 	if (This->asio_callbacks->asioMessage(kAsioSelectorSupported, kAsioLatenciesChanged, 0 , 0))
-		TRACE("kAsioLatenciesChanged ");
+		TRACE("\tkAsioLatenciesChanged");
 
 	if (This->asio_callbacks->asioMessage(kAsioSupportsTimeInfo, 0, 0, 0))
 	{
-		TRACE("bufferSwitchTimeInfo ");
+		TRACE("\tbufferSwitchTimeInfo");
 		This->asio_time_info_mode = TRUE;
 		if (This->asio_callbacks->asioMessage(kAsioSupportsTimeCode,  0, 0, 0))
 		{
-			TRACE("TimeCode");
+			TRACE("\t\tTimeCode");
 			This->asio_can_time_code = TRUE;
 		}
 	}
-	else
-		TRACE("BufferSwitch");
-	TRACE("\n");
+	else {
+		TRACE("\tBufferSwitch");
+	}
 
 	/* Allocate audio buffers */
 
@@ -736,7 +736,7 @@ HIDDEN ASIOError __thiscall CreateBuffers(LPWINEASIO iface, ASIOBufferInfo *buff
 			buffer_info->buffers[1] = &This->input_channel[buffer_info->channelNum].audio_buffer[This->asio_current_buffersize];
 			This->input_channel[buffer_info->channelNum].active = ASIOTrue;
 			This->asio_active_inputs++;
-			TRACE("ASIO audio buffer for channel %i as input %i created", i, (int) This->asio_active_inputs);
+			// TRACE("ASIO audio buffer for channel %i as input %i created", i, (int) This->asio_active_inputs);
 		}
 		else
 		{
@@ -744,7 +744,7 @@ HIDDEN ASIOError __thiscall CreateBuffers(LPWINEASIO iface, ASIOBufferInfo *buff
 			buffer_info->buffers[1] = &This->output_channel[buffer_info->channelNum].audio_buffer[This->asio_current_buffersize];
 			This->output_channel[buffer_info->channelNum].active = ASIOTrue;
 			This->asio_active_outputs++;
-			TRACE("ASIO audio buffer for channel %i as output %i created", i, (int) This->asio_active_outputs);
+			// TRACE("ASIO audio buffer for channel %i as output %i created", i, (int) This->asio_active_outputs);
 		}
 	}
 	TRACE("%i audio channels initialized", (int) (This->asio_active_inputs + This->asio_active_outputs));
@@ -925,7 +925,7 @@ DEFINE_THISCALL_WRAPPER(OutputReady, 4)
 HIDDEN ASIOError __thiscall OutputReady(LPWINEASIO iface)
 {
 	/* disable this to stop stand alone NI programs from spamming the console */
-	TRACE("iface: %p", iface);
+	// TRACE("iface: %p", iface);
 	return ASE_NotPresent;
 }
 

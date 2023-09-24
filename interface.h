@@ -126,30 +126,30 @@ typedef struct IWineASIOImpl
  *  as seen from the WineASIO source
  */
 
-HIDDEN HRESULT   STDMETHODCALLTYPE      QueryInterface(LPWINEASIO iface, REFIID riid, void **ppvObject);
-HIDDEN ULONG     STDMETHODCALLTYPE      AddRef(LPWINEASIO iface);
-HIDDEN ULONG     STDMETHODCALLTYPE      Release(LPWINEASIO iface);
-HIDDEN ASIOBool  STDMETHODCALLTYPE      Init(LPWINEASIO iface, void *sysRef);
-HIDDEN void      STDMETHODCALLTYPE      GetDriverName(LPWINEASIO iface, char *name);
-HIDDEN LONG      STDMETHODCALLTYPE      GetDriverVersion(LPWINEASIO iface);
-HIDDEN void      STDMETHODCALLTYPE      GetErrorMessage(LPWINEASIO iface, char *string);
-HIDDEN ASIOError STDMETHODCALLTYPE      Start(LPWINEASIO iface);
-HIDDEN ASIOError STDMETHODCALLTYPE      Stop(LPWINEASIO iface);
-HIDDEN ASIOError STDMETHODCALLTYPE      GetChannels (LPWINEASIO iface, LONG *numInputChannels, LONG *numOutputChannels);
-HIDDEN ASIOError STDMETHODCALLTYPE      GetLatencies(LPWINEASIO iface, LONG *inputLatency, LONG *outputLatency);
-HIDDEN ASIOError STDMETHODCALLTYPE      GetBufferSize(LPWINEASIO iface, LONG *minSize, LONG *maxSize, LONG *preferredSize, LONG *granularity);
-HIDDEN ASIOError STDMETHODCALLTYPE      CanSampleRate(LPWINEASIO iface, ASIOSampleRate sampleRate);
-HIDDEN ASIOError STDMETHODCALLTYPE      GetSampleRate(LPWINEASIO iface, ASIOSampleRate *sampleRate);
-HIDDEN ASIOError STDMETHODCALLTYPE      SetSampleRate(LPWINEASIO iface, ASIOSampleRate sampleRate);
-HIDDEN ASIOError STDMETHODCALLTYPE      GetClockSources(LPWINEASIO iface, ASIOClockSource *clocks, LONG *numSources);
-HIDDEN ASIOError STDMETHODCALLTYPE      SetClockSource(LPWINEASIO iface, LONG index);
-HIDDEN ASIOError STDMETHODCALLTYPE      GetSamplePosition(LPWINEASIO iface, ASIOSamples *sPos, ASIOTimeStamp *tStamp);
-HIDDEN ASIOError STDMETHODCALLTYPE      GetChannelInfo(LPWINEASIO iface, ASIOChannelInfo *info);
-HIDDEN ASIOError STDMETHODCALLTYPE      CreateBuffers(LPWINEASIO iface, ASIOBufferInfo *bufferInfo, LONG numChannels, LONG bufferSize, ASIOCallbacks *asioCallbacks);
-HIDDEN ASIOError STDMETHODCALLTYPE      DisposeBuffers(LPWINEASIO iface);
-HIDDEN ASIOError STDMETHODCALLTYPE      ControlPanel(LPWINEASIO iface);
-HIDDEN ASIOError STDMETHODCALLTYPE      Future(LPWINEASIO iface, LONG selector, void *opt);
-HIDDEN ASIOError STDMETHODCALLTYPE      OutputReady(LPWINEASIO iface);
+HIDDEN HRESULT   __thiscall      QueryInterface(LPWINEASIO iface, REFIID riid, void **ppvObject);
+HIDDEN ULONG     __thiscall      AddRef(LPWINEASIO iface);
+HIDDEN ULONG     __thiscall      Release(LPWINEASIO iface);
+HIDDEN ASIOBool  __thiscall      Init(LPWINEASIO iface, void *sysRef);
+HIDDEN void      __thiscall      GetDriverName(LPWINEASIO iface, char *name);
+HIDDEN LONG      __thiscall      GetDriverVersion(LPWINEASIO iface);
+HIDDEN void      __thiscall      GetErrorMessage(LPWINEASIO iface, char *string);
+HIDDEN ASIOError __thiscall      Start(LPWINEASIO iface);
+HIDDEN ASIOError __thiscall      Stop(LPWINEASIO iface);
+HIDDEN ASIOError __thiscall      GetChannels (LPWINEASIO iface, LONG *numInputChannels, LONG *numOutputChannels);
+HIDDEN ASIOError __thiscall      GetLatencies(LPWINEASIO iface, LONG *inputLatency, LONG *outputLatency);
+HIDDEN ASIOError __thiscall      GetBufferSize(LPWINEASIO iface, LONG *minSize, LONG *maxSize, LONG *preferredSize, LONG *granularity);
+HIDDEN ASIOError __thiscall      CanSampleRate(LPWINEASIO iface, ASIOSampleRate sampleRate);
+HIDDEN ASIOError __thiscall      GetSampleRate(LPWINEASIO iface, ASIOSampleRate *sampleRate);
+HIDDEN ASIOError __thiscall      SetSampleRate(LPWINEASIO iface, ASIOSampleRate sampleRate);
+HIDDEN ASIOError __thiscall      GetClockSources(LPWINEASIO iface, ASIOClockSource *clocks, LONG *numSources);
+HIDDEN ASIOError __thiscall      SetClockSource(LPWINEASIO iface, LONG index);
+HIDDEN ASIOError __thiscall      GetSamplePosition(LPWINEASIO iface, ASIOSamples *sPos, ASIOTimeStamp *tStamp);
+HIDDEN ASIOError __thiscall      GetChannelInfo(LPWINEASIO iface, ASIOChannelInfo *info);
+HIDDEN ASIOError __thiscall      CreateBuffers(LPWINEASIO iface, ASIOBufferInfo *bufferInfo, LONG numChannels, LONG bufferSize, ASIOCallbacks *asioCallbacks);
+HIDDEN ASIOError __thiscall      DisposeBuffers(LPWINEASIO iface);
+HIDDEN ASIOError __thiscall      ControlPanel(LPWINEASIO iface);
+HIDDEN ASIOError __thiscall      Future(LPWINEASIO iface, LONG selector, void *opt);
+HIDDEN ASIOError __thiscall      OutputReady(LPWINEASIO iface);
 
 static const IWineASIOVtbl WineASIO_Vtbl =
 {
@@ -157,27 +157,27 @@ static const IWineASIOVtbl WineASIO_Vtbl =
 	(void *) AddRef,
 	(void *) Release,
 
-    (void *) THISCALL(Init),
-    (void *) THISCALL(GetDriverName),
-    (void *) THISCALL(GetDriverVersion),
-    (void *) THISCALL(GetErrorMessage),
-    (void *) THISCALL(Start),
-    (void *) THISCALL(Stop),
-    (void *) THISCALL(GetChannels),
-    (void *) THISCALL(GetLatencies),
-    (void *) THISCALL(GetBufferSize),
-    (void *) THISCALL(CanSampleRate),
-    (void *) THISCALL(GetSampleRate),
-    (void *) THISCALL(SetSampleRate),
-    (void *) THISCALL(GetClockSources),
-    (void *) THISCALL(SetClockSource),
-    (void *) THISCALL(GetSamplePosition),
-    (void *) THISCALL(GetChannelInfo),
-    (void *) THISCALL(CreateBuffers),
-    (void *) THISCALL(DisposeBuffers),
-    (void *) THISCALL(ControlPanel),
-    (void *) THISCALL(Future),
-    (void *) THISCALL(OutputReady)
+	(void *) THISCALL(Init),
+	(void *) THISCALL(GetDriverName),
+	(void *) THISCALL(GetDriverVersion),
+	(void *) THISCALL(GetErrorMessage),
+	(void *) THISCALL(Start),
+	(void *) THISCALL(Stop),
+	(void *) THISCALL(GetChannels),
+	(void *) THISCALL(GetLatencies),
+	(void *) THISCALL(GetBufferSize),
+	(void *) THISCALL(CanSampleRate),
+	(void *) THISCALL(GetSampleRate),
+	(void *) THISCALL(SetSampleRate),
+	(void *) THISCALL(GetClockSources),
+	(void *) THISCALL(SetClockSource),
+	(void *) THISCALL(GetSamplePosition),
+	(void *) THISCALL(GetChannelInfo),
+	(void *) THISCALL(CreateBuffers),
+	(void *) THISCALL(DisposeBuffers),
+	(void *) THISCALL(ControlPanel),
+	(void *) THISCALL(Future),
+	(void *) THISCALL(OutputReady)
 };
 
 

@@ -3,7 +3,6 @@ SCRIPT_PATH=$(dirname $(realpath -s $0))
 PREFIX_PATH=${SCRIPT_PATH}/prefix_debug
 
 export WINEPREFIX=${PREFIX_PATH}
-export PIPEWIRE_LATENCY=256/48000
 
 wineserver -k
 
