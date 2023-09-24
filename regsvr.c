@@ -456,7 +456,7 @@ static LONG recursive_delete_keyW(HKEY base, WCHAR const* name) {
  */
 
 static struct regsvr_coclass const coclass_list[] = {
-    {&CLSID_WineASIO, DRIVER_NAME " Object", NULL, "wineasiopw.dll",
+    {&CLSID_WineASIO, DRIVER_NAME " Object", NULL, DLL_NAME,
      "Apartment"},
     {NULL} /* list terminator */
 };

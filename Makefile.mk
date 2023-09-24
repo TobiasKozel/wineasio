@@ -12,7 +12,7 @@ ifeq ($(M),)
 $(error incorrect use of Makefile, M var is missing)
 endif
 
-wineasio_dll_MODULE   = wineasiopw.dll
+wineasio_dll_MODULE   = wineasio2.dll
 
 PREFIX                = /usr
 SRCDIR                = .

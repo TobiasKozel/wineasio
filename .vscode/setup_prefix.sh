@@ -5,8 +5,8 @@
 SCRIPT_PATH=$(dirname $(realpath -s $0)) 
 
 PREFIX_PATH=${SCRIPT_PATH}/prefix_debug
-BUILD_PATH64=${SCRIPT_PATH}/../build64
-BUILD_PATH32=${SCRIPT_PATH}/../build32
+# BUILD_PATH64=${SCRIPT_PATH}/../build64
+# BUILD_PATH32=${SCRIPT_PATH}/../build32
 
 export WINEPREFIX=${PREFIX_PATH}
 
@@ -14,10 +14,12 @@ wineserver -k
 
 rm -rf ${PREFIX_PATH}
 
-wineboot -i
-
 # Need to build before registering
-make 32 64 DEBUG=true
+make 32
+make 64
+
+# setup prefix
+wineboot -i
 
 
 # final installation
@@ -31,14 +33,14 @@ make 32 64 DEBUG=true
 # sudo ln -s ${BUILD_PATH32}/wineasiopw.dll.so /usr/lib32/wine/i386-unix/
 
 # cleanup
-# sudo rm /usr/lib/wine/x86_64-windows/wineasiopw.dll
-# sudo rm /usr/lib/wine/x86_64-unix/wineasiopw.dll.so
-# sudo rm /usr/lib32/wine/i386-windows/wineasiopw.dll
-# sudo rm /usr/lib32/wine/i386-unix/wineasiopw.dll.so
+# sudo rm /usr/lib/wine/x86_64-windows/wineasio2.dll
+# sudo rm /usr/lib/wine/x86_64-unix/wineasio2.dll.so
+# sudo rm /usr/lib32/wine/i386-windows/wineasio2.dll
+# sudo rm /usr/lib32/wine/i386-unix/wineasio2.dll.so
 
 
-wine64 regsvr32 /usr/lib/wine/x86_64-windows/wineasiopw.dll
-regsvr32 /usr/lib32/wine/i386-windows/wineasiopw.dll
+wine64 regsvr32 /usr/lib/wine/x86_64-windows/wineasio2.dll
+regsvr32 /usr/lib32/wine/i386-windows/wineasio2.dll
 
 # wine64 regsvr32 wineasiopw.dll
 # regsvr32 wineasiopw.dll

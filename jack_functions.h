@@ -73,10 +73,10 @@ static inline int jack_process_callback(jack_nframes_t nframes, void* arg) {
 
   if (This->reset_requested) {
     This->reset_requested = 0;
-            if (This->asio_callbacks->asioMessage(kAsioSelectorSupported,
-                                              kAsioResetRequest, 0, 0)) {
-          This->asio_callbacks->asioMessage(kAsioResetRequest, 0, 0, 0);
-        }
+    if (This->asio_callbacks->asioMessage(kAsioSelectorSupported,
+                                          kAsioResetRequest, 0, 0)) {
+      This->asio_callbacks->asioMessage(kAsioResetRequest, 0, 0, 0);
+    }
     return 0;
   }
 
@@ -199,8 +199,7 @@ static int jack_thread_creator(pthread_t* thread_id, const pthread_attr_t* attr,
   jack_thread_creator_privates.arg = arg;
   jack_thread_creator_privates.jack_callback_thread_created =
       CreateEventW(NULL, FALSE, FALSE, NULL);
-  control_thread_created =
-      CreateEventW(NULL, FALSE, FALSE, NULL);
+  control_thread_created = CreateEventW(NULL, FALSE, FALSE, NULL);
   CreateThread(NULL, 0, jack_wine_callback_thread, arg, 0, 0);
   CreateThread(NULL, 0, jack_wine_control_thread, control_thread_created, 0, 0);
   WaitForSingleObject(jack_thread_creator_privates.jack_callback_thread_created,

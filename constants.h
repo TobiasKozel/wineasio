@@ -9,23 +9,27 @@
 #define ASIO_MAXIMUM_BUFFERSIZE 8192
 #define ASIO_PREFERRED_BUFFERSIZE 256
 
-/* {48D0C522-BFCC-45cc-8B84-17F25F33E6A0} */
 static GUID const CLSID_WineASIO = {
     0x48d0c522,
     0xbfcc,
     0x45cc,
-    {0x8b, 0x84, 0x17, 0xf2, 0x5f, 0x33, 0xe6, 0xa1}};
-#define CLISID_WineASIOString "{48D0C522-BFCC-45CC-8B84-17F25F33E6A1}"
+    {0x8b, 0x84, 0x17, 0xf2, 0x5f, 0x33, 0xe6, 0xaa}};
+#define CLISID_WineASIOString "{48D0C522-BFCC-45CC-8B84-17F25F33E6AA}"
 
-#define DRIVER_NAME "WineASIOPW"
-#define DRIVER_REG_PATH "Software\\ASIO\\WineASIOPW"
+#define DRIVER_NAME "WineASIO2"
+
+// This also needs to be set in the Makefile.mk
+#define DLL_NAME "wineasio2.dll"
+
+// This also needs to be set in the key_software_wine_wineasio array below
+#define DRIVER_REG_PATH "Software\\ASIO\\WineASIO2"
 
 /***********************************************************************
  *		Unicode strings used for the registry
  */
 static const WCHAR key_software_wine_wineasio[] = {
     'S',  'o', 'f', 't', 'w', 'a', 'r', 'e', '\\', 'W', 'i', 'n', 'e',
-    '\\', 'W', 'i', 'n', 'e', 'A', 'S', 'I', 'O',  'P', 'W', 0};
+    '\\', 'W', 'i', 'n', 'e', 'A', 'S', 'I', 'O',  '2', 0};
 static const WCHAR value_wineasio_number_inputs[] = {
     'N', 'u', 'm', 'b', 'e', 'r', ' ', 'o', 'f',
     ' ', 'i', 'n', 'p', 'u', 't', 's', 0};
